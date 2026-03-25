@@ -19,7 +19,13 @@
       "Bash(npm ls:*)",
       "Bash(npx tsc:*)",
       "Bash(kill %1)",
-      "Bash(grep -r \"AllClub\\\\|allclub\" --include=*.ts --include=*.tsx --include=*.json --include=*.md --include=*.js -l .)"
+      "Bash(grep -r \"AllClub\\\\|allclub\" --include=*.ts --include=*.tsx --include=*.json --include=*.md --include=*.js -l .)",
+      "Bash(npx supabase:*)",
+      "Bash(docker:*)",
+      "Bash(cd:*)",
+      "Bash(grep -l 'href=\"\"\"\"' docs/mockup/*.html)",
+      "Bash(gh api:*)",
+      "Bash(gh repo:*)"
     ]
   }
 }
