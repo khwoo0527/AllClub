@@ -150,9 +150,10 @@ memory: project
 - {초기 구조 파일들} (생성한 경우)
 
 다음 단계:
-1. 요구사항을 정리해주세요 (docs/prd.md 또는 구두 설명)
+1. 요구사항을 정리해주세요 → `.claude/rules/prd-guide.md`를 참조하여 docs/prd.md 작성
+   (구두로 설명하면 제가 PRD 가이드 기준에 맞게 정리해드립니다)
 2. 준비되면 → "ROADMAP 만들어줘" (prd-to-roadmap 에이전트)
-3. 또는 바로 → "sprint 계획 세워줘" (sprint-planner 에이전트)
+3. 소규모 프로젝트는 바로 → "sprint 계획 세워줘" (sprint-planner 에이전트)
 ```
 
 ## 기술 스택 추천 레퍼런스

@@ -470,6 +470,116 @@ export const spacing = {
 - 색상만으로 정보를 전달하지 않는다 (색각 이상 사용자 고려)
 - `accessibilityRole` 적절히 설정 (`button`, `link`, `header` 등)
 
+### 반응형 디자인 (Expo Web 대응)
+
+> Expo로 만든 앱은 웹으로도 배포 가능하다. 모바일 네이티브와 웹 데스크톱 모두에서
+> 좋은 UX를 제공하려면 반응형 설계가 필수다.
+
+**브레이크포인트 기준:**
+
+| 이름 | 너비 | 대상 디바이스 | NativeWind 접두어 |
+|------|------|-------------|-----------------|
+| 기본 (모바일) | ~767px | 스마트폰 | (접두어 없음) |
+| md (태블릿) | 768~1023px | 태블릿, 작은 노트북 | `md:` |
+| lg (데스크톱) | 1024px~ | 데스크톱, 큰 노트북 | `lg:` |
+
+**모바일 퍼스트 원칙:**
+- 기본 스타일은 모바일 기준으로 작성한다
+- 큰 화면은 `md:`, `lg:` 접두어로 **확장**한다 (모바일 → 데스크톱 순서)
+- 절대 데스크톱 먼저 만들고 모바일에 맞추지 않는다
+
+```typescript
+// Good: 모바일 퍼스트 — 기본이 모바일, md/lg로 확장
+<View className="flex-1 px-4 md:px-8 lg:px-16">
+  {/* 모바일: 1열, 태블릿: 2열, 데스크톱: 3열 */}
+  <View className="flex-col md:flex-row md:flex-wrap">
+    <View className="w-full md:w-1/2 lg:w-1/3 p-2">
+      <ClubCard club={club} />
+    </View>
+  </View>
+</View>
+
+// Bad: 데스크톱 먼저 작성
+<View className="flex-row flex-wrap px-16 lg:px-16 md:px-8 sm:px-4">
+```
+
+**레이아웃 전환 패턴:**
+
+```typescript
+// 반응형 훅 — 현재 디바이스 크기 감지
+import { useWindowDimensions } from 'react-native';
+
+function useDeviceType() {
+  const { width } = useWindowDimensions();
+  return {
+    isMobile: width < 768,
+    isTablet: width >= 768 && width < 1024,
+    isDesktop: width >= 1024,
+  } as const;
+}
+
+// 사용 예: 모바일은 풀스크린, 데스크톱은 사이드바 레이아웃
+function ClubLayout({ children }: PropsWithChildren) {
+  const { isDesktop } = useDeviceType();
+
+  if (isDesktop) {
+    return (
+      <View className="flex-row max-w-[1200px] mx-auto">
+        <View className="w-64 border-r border-gray-200">
+          <Sidebar />
+        </View>
+        <View className="flex-1">{children}</View>
+      </View>
+    );
+  }
+
+  return <View className="flex-1">{children}</View>;
+}
+```
+
+**반응형 규칙:**
+- 모든 화면은 **모바일에서 먼저 완성**한 후 태블릿/데스크톱으로 확장
+- 고정 너비(`width: 360px`) 사용 금지 → `flex`, `%`, `max-w-[]` 사용
+- 이미지는 `aspect-ratio` + `w-full`로 비율 유지
+- 텍스트는 고정 사이즈 → NativeWind 반응형 사이즈 (`text-sm md:text-base lg:text-lg`)
+- 그리드: 모바일 1열 → 태블릿 2열 → 데스크톱 3열 (카드 목록 등)
+- 네비게이션: 모바일 하단 탭 → 데스크톱 사이드바 또는 상단 GNB
+- 모달/바텀시트: 모바일은 바텀시트, 데스크톱은 센터 모달
+- 터치/클릭: `Pressable`은 모바일 터치 + 웹 클릭 모두 지원 (hover 상태는 웹에서만)
+
+```typescript
+// 웹에서만 hover 스타일 적용
+<Pressable
+  className="bg-white active:bg-gray-100 web:hover:bg-gray-50 rounded-xl p-4"
+>
+```
+
+**자주 쓰는 반응형 컴포넌트 패턴:**
+
+```typescript
+// 반응형 컨테이너 — 데스크톱에서 max-width + 가운데 정렬
+function Container({ children, className }: PropsWithChildren<{ className?: string }>) {
+  return (
+    <View className={`flex-1 px-4 md:px-8 lg:max-w-[1200px] lg:mx-auto lg:px-12 ${className}`}>
+      {children}
+    </View>
+  );
+}
+
+// 반응형 그리드 — 모바일 1열 / 태블릿 2열 / 데스크톱 3열
+function ResponsiveGrid({ children }: PropsWithChildren) {
+  return (
+    <View className="flex-col md:flex-row md:flex-wrap">
+      {React.Children.map(children, (child) => (
+        <View className="w-full md:w-1/2 lg:w-1/3 p-2">
+          {child}
+        </View>
+      ))}
+    </View>
+  );
+}
+```
+
 ---
 
 ## 리스트 최적화

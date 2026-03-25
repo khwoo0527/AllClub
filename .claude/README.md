@@ -199,6 +199,7 @@ cp -r {기존프로젝트}/.claude/ {새프로젝트}/.claude/
 │
 ├── rules/                       # 규칙 라이브러리 (기술 스택별 + 워크플로우)
 │   ├── TEMPLATE.md              #   rules 파일 작성 가이드 (메타 템플릿)
+│   ├── prd-guide.md             #   PRD 작성 가이드 (품질 기준)
 │   ├── sprint-workflow.md       #   스프린트/핫픽스 워크플로우 (범용)
 │   ├── csharp.md                #   C# 베스트 프랙티스
 │   ├── notion.md                #   Notion 연동 규칙
