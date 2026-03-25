@@ -1,7 +1,3 @@
-- [feedback_workflow.md](feedback_workflow.md) — 코드 변경 시 확인 요청, 커밋은 빌드+실행 확인 후에만
-- [feedback_step_by_step.md](feedback_step_by_step.md) — 파일 수정 시 1개씩 보여주고 확인 후 다음 진행, 몰아치기 금지
-- [feedback_claude_folder_git.md](feedback_claude_folder_git.md) — .claude 폴더 gitignore 넣지 않음, 멀티 환경 동기화 필수
-- [feedback_quality_first.md](feedback_quality_first.md) — 범용화해도 시니어 전문가 수준 유지, 바이브 코딩 품질 절대 사수
-- [feedback_info_placement.md](feedback_info_placement.md) — 정보를 올바른 문서 위치에 안내 (CLAUDE.md vs PRD vs ROADMAP)
-- [feedback_memory_location.md](feedback_memory_location.md) — 범용 피드백은 .claude/memory에, 프로젝트 종속은 프로젝트 메모리에
-- [feedback_follow_agent_procedure.md](feedback_follow_agent_procedure.md) — 에이전트 작업 직접 수행 시 해당 에이전트의 절차+템플릿+체크리스트를 따르면서 대화 맥락 활용
+- [feedback_work_style.md](feedback_work_style.md) — 단계별 진행, 커밋/푸쉬 확인 절차, 코드 품질 기본 원칙
+- [feedback_document_guide.md](feedback_document_guide.md) — 정보를 올바른 문서에 안내 (CLAUDE.md vs PRD vs ROADMAP), 메모리 저장 위치 판단
+- [feedback_principles.md](feedback_principles.md) — 품질 타협 금지, 에이전트 절차 준수, .claude 폴더 git 포함

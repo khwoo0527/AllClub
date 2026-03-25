@@ -1,6 +1,8 @@
 ---
 paths:
-  - "docs/**"
+  - "**/notion/**"
+  - "**/notion*.ts"
+  - "**/notion*.md"
 ---
 
 # Notion 기술 문서 관리
