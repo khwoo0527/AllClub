@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AllClub - 테니스 동호회</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+
+  /* Header */
+  header { background: #fff; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e0e0e0; }
+  .logo { font-size: 20px; font-weight: 700; color: #2e7d32; }
+  .logo span { font-size: 18px; margin-right: 4px; }
+  nav { display: flex; gap: 24px; }
+  nav a { text-decoration: none; color: #555; font-size: 15px; }
+  nav a.active { color: #2e7d32; font-weight: 600; border-bottom: 2px solid #2e7d32; padding-bottom: 2px; }
+  .search { padding: 8px 16px; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; width: 200px; }
+
+  /* Main */
+  .container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
+  h1 { text-align: center; font-size: 26px; margin-bottom: 6px; }
+  .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 32px; }
+
+  /* Cards */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .card { background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e8e8e8; transition: box-shadow 0.2s; cursor: pointer; }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .card-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .card-title span { margin-right: 6px; }
+  .card-desc { font-size: 13px; color: #666; margin-bottom: 12px; }
+  .card-info { font-size: 13px; color: #777; line-height: 1.8; }
+  .card-btn { display: inline-block; margin-top: 14px; padding: 8px 20px; background: #2e7d32; color: #fff; border-radius: 20px; font-size: 13px; text-decoration: none; }
+  .card-btn:hover { background: #256d28; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="main.html" class="logo" style="text-decoration:none;"><span>🎾</span> AllClub</a>
+  <nav>
+    <a href="main.html" class="active">홈</a>
+    <a href="#">인기 동호회</a>
+    <a href="#">공지사항</a>
+  </nav>
+  <input type="text" class="search" placeholder="🔍 검색">
+</header>
+
+<div class="container">
+  <h1>관심 있는 테니스 동호회를 찾아보세요</h1>
+  <p class="subtitle">Find the tennis club that's right for you!</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-title"><span>🎾</span>TenniSweet</div>
+      <div class="card-desc">강남 저녁 모임, 20~40대 환영</div>
+      <div class="card-info">
+        👥 32명<br>
+        📍 강남 / 서초
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>한강 테니스 모임</div>
+      <div class="card-desc">주민 한강 테니스, 소용품 참영</div>
+      <div class="card-info">
+        👥 18명<br>
+        📍 여의도
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>주말 테니스 크루</div>
+      <div class="card-desc">주말 정기 게임, 실력 무관</div>
+      <div class="card-info">
+        👥 24명<br>
+        📍 서울 전역
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>송마 테니스 모임</div>
+      <div class="card-desc">같남 자주, 꾸준히 운동해요</div>
+      <div class="card-info">
+        👥 21명<br>
+        📍 송마
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>명일 아침 테니스</div>
+      <div class="card-desc">출근 전 운동, 오전 6~8시</div>
+      <div class="card-info">
+        👥 12명<br>
+        📍 강동
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>테니스 초보 클럽</div>
+      <div class="card-desc">입문자 전용, 테스 없이 시작</div>
+      <div class="card-info">
+        👥 40명<br>
+        📍 서울
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>잠실 나이트 테니스</div>
+      <div class="card-desc">퇴근 후 야간 테니스, 직장인 환영</div>
+      <div class="card-info">
+        👥 28명<br>
+        📍 잠실 / 송파
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>판교 테니스 랠리</div>
+      <div class="card-desc">IT 직장인 주말 모임, 초중급</div>
+      <div class="card-info">
+        👥 16명<br>
+        📍 판교 / 분당
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎾</span>용산 위켄드 테니스</div>
+      <div class="card-desc">토요일 오전 정기 게임</div>
+      <div class="card-info">
+        👥 15명<br>
+        📍 용산 / 이태원
+      </div>
+      <a href="schedule.html" class="card-btn">상세 보기 ›</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
