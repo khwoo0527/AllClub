@@ -4,7 +4,10 @@
       "Bash(for f:*)",
       "Bash(do echo:*)",
       "Read(//d/Source/toy/AllClub/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(ls -la *.md)",
+      "Bash(find docs/ -name *.md)",
+      "Bash(find .claude/ -name *.md -o -name *.json)"
     ]
   }
 }
