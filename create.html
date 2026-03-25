@@ -81,6 +81,22 @@
   .btn-submit:hover { background: #256d28; }
   .btn-cancel { background: #fff; color: #555; border: 1px solid #ddd; }
   .btn-cancel:hover { background: #f5f5f5; }
+
+  @media (max-width: 768px) {
+    header { padding: 12px 16px; }
+    .tabs { gap: 14px; }
+    .tabs a { font-size: 13px; }
+    .container { padding: 0 12px; margin: 16px auto; }
+    .form-header { padding: 16px; }
+    .form-header h2 { font-size: 18px; }
+    .form-body { padding: 20px 14px; }
+    .datetime-row { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .account-row { grid-template-columns: 1fr; }
+    .capacity-input { justify-content: flex-start; }
+    .form-actions { flex-direction: column; }
+    .btn { text-align: center; }
+  }
 </style>
 </head>
 <body>

@@ -97,6 +97,29 @@
   .bar-label { font-size: 10px; color: #888; }
   .bar-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; font-size: 11px; color: #888; }
   .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+  @media (max-width: 768px) {
+    header { padding: 12px 16px; }
+    .tabs { gap: 14px; }
+    .tabs a { font-size: 13px; }
+    .container { padding: 0 12px; margin: 16px auto; }
+    .club-name { font-size: 18px; }
+    .my-summary { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .summary-card { padding: 14px 10px; }
+    .summary-num { font-size: 22px; }
+    .recent-results { flex-wrap: wrap; }
+    .result-dot { width: 20px; height: 20px; font-size: 9px; }
+    .rank-table { font-size: 12px; }
+    .rank-table th, .rank-table td { padding: 10px 8px; }
+    .rank-table th:nth-child(4), .rank-table td:nth-child(4),
+    .rank-table th:nth-child(5), .rank-table td:nth-child(5) { display: none; }
+    .partner-grid { grid-template-columns: 1fr; gap: 10px; }
+    .partner-card { padding: 12px; }
+    .partner-pct { font-size: 18px; }
+    .bar-chart { height: 120px; }
+    .bar-wrapper { height: 100px; }
+    .bar { width: 12px; }
+  }
 </style>
 </head>
 <body>

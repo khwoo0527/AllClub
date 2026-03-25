@@ -32,6 +32,16 @@
   .card-info { font-size: 13px; color: #777; line-height: 1.8; }
   .card-btn { display: inline-block; margin-top: 14px; padding: 8px 20px; background: #2e7d32; color: #fff; border-radius: 20px; font-size: 13px; text-decoration: none; }
   .card-btn:hover { background: #256d28; }
+  @media (max-width: 768px) {
+    header { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+    nav { gap: 14px; }
+    nav a { font-size: 13px; }
+    .search { width: 100%; order: 3; }
+    .container { margin: 20px auto; }
+    h1 { font-size: 20px; }
+    .cards { grid-template-columns: 1fr; gap: 14px; }
+    .card { padding: 18px; }
+  }
 </style>
 </head>
 <body>
