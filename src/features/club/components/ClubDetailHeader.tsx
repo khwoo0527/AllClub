@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native';
+import { Image } from 'expo-image';
 import { Badge, Button } from '@/shared/components';
 import { COLORS } from '@/shared/constants';
-import { CLUB_TYPE_LABELS } from '../constants';
 import type { ClubWithDetails } from '../types';
 
 interface ClubDetailHeaderProps {
@@ -11,6 +11,28 @@ interface ClubDetailHeaderProps {
 export function ClubDetailHeader({ club }: ClubDetailHeaderProps) {
   return (
     <View style={{ gap: 16 }}>
+      {/* 대표 이미지 */}
+      {club.cover_image_url ? (
+        <Image
+          source={{ uri: club.cover_image_url }}
+          style={{ width: '100%', height: 200, borderRadius: 12 }}
+          contentFit="cover"
+        />
+      ) : (
+        <View
+          style={{
+            width: '100%',
+            height: 160,
+            backgroundColor: COLORS.PRIMARY_LIGHT,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Text style={{ fontSize: 48 }}>🎾</Text>
+        </View>
+      )}
+
       {/* 이름 + 뱃지 */}
       <View>
         <Text style={{ fontSize: 24, fontWeight: 'bold', color: COLORS.TEXT_PRIMARY, marginBottom: 8 }}>
@@ -18,7 +40,6 @@ export function ClubDetailHeader({ club }: ClubDetailHeaderProps) {
         </Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {club.is_recruiting && <Badge text="모집중" variant="success" />}
-          <Badge text={CLUB_TYPE_LABELS[club.club_type] ?? club.club_type} variant="neutral" />
         </View>
       </View>
 
@@ -49,7 +70,6 @@ export function ClubDetailHeader({ club }: ClubDetailHeaderProps) {
               : '미정'
           }
         />
-        <InfoRow label="모임 유형" value={CLUB_TYPE_LABELS[club.club_type] ?? club.club_type} />
         <InfoRow label="멤버" value={`${club.member_count} / ${club.max_members}명`} />
         <InfoRow label="공개 여부" value={club.is_public ? '공개' : '비공개'} />
       </View>

@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { View, Text, TextInput, Switch, Pressable } from 'react-native';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Ionicons } from '@expo/vector-icons';
 import { Button, DropdownPicker } from '@/shared/components';
 import {
   COLORS,
@@ -11,7 +15,6 @@ import {
   CLUB_NAME_MAX_LENGTH,
   CLUB_DESCRIPTION_MAX_LENGTH,
 } from '@/shared/constants';
-import { CLUB_TYPES, CLUB_TYPE_LABELS } from '../constants';
 import type { CreateClubInput } from '../types';
 
 const clubSchema = z.object({
@@ -26,7 +29,6 @@ const clubSchema = z.object({
     .or(z.literal('')),
   region: z.string().optional().or(z.literal('')),
   city: z.string().optional().or(z.literal('')),
-  club_type: z.string(),
   max_members: z.number().min(10).max(100),
   is_public: z.boolean(),
   is_recruiting: z.boolean(),
@@ -36,17 +38,12 @@ type ClubFormData = z.infer<typeof clubSchema>;
 
 interface ClubFormProps {
   sportCategoryId: string;
-  onSubmit: (input: CreateClubInput) => void;
+  onSubmit: (input: CreateClubInput, imageUri?: string) => void;
   isLoading: boolean;
 }
 
-const CLUB_TYPE_OPTIONS = [
-  { value: CLUB_TYPES.REGULAR, label: CLUB_TYPE_LABELS[CLUB_TYPES.REGULAR] },
-  { value: CLUB_TYPES.LIGHTNING, label: CLUB_TYPE_LABELS[CLUB_TYPES.LIGHTNING] },
-  { value: CLUB_TYPES.LEAGUE, label: CLUB_TYPE_LABELS[CLUB_TYPES.LEAGUE] },
-];
-
 export function ClubForm({ sportCategoryId, onSubmit, isLoading }: ClubFormProps) {
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<ClubFormData>({
     resolver: zodResolver(clubSchema),
     defaultValues: {
@@ -54,8 +51,7 @@ export function ClubForm({ sportCategoryId, onSubmit, isLoading }: ClubFormProps
       description: '',
       region: '',
       city: '',
-      club_type: CLUB_TYPES.REGULAR,
-      max_members: 50,
+      max_members: 30,
       is_public: true,
       is_recruiting: true,
     },
@@ -64,18 +60,56 @@ export function ClubForm({ sportCategoryId, onSubmit, isLoading }: ClubFormProps
   const selectedRegion = watch('region');
   const districts = selectedRegion ? REGIONS[selectedRegion] ?? [] : [];
 
-  const handleFormSubmit = (data: ClubFormData) => {
-    onSubmit({
-      ...data,
-      sport_category_id: sportCategoryId,
-      description: data.description || undefined,
-      region: data.region || undefined,
-      city: data.city || undefined,
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
     });
+
+    if (!result.canceled && result.assets[0]) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const handleFormSubmit = (data: ClubFormData) => {
+    onSubmit(
+      {
+        ...data,
+        sport_category_id: sportCategoryId,
+        club_type: 'regular',
+        description: data.description || undefined,
+        region: data.region || undefined,
+        city: data.city || undefined,
+      },
+      imageUri ?? undefined,
+    );
   };
 
   return (
     <View style={{ gap: 20 }}>
+      {/* 대표 이미지 */}
+      <View>
+        <Text style={styles.label}>대표 이미지</Text>
+        <Pressable onPress={pickImage} style={styles.imagePicker}>
+          {imageUri ? (
+            <Image
+              source={{ uri: imageUri }}
+              style={{ width: '100%', height: '100%', borderRadius: 12 }}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={{ alignItems: 'center', gap: 8 }}>
+              <Ionicons name="camera-outline" size={32} color={COLORS.TEXT_HINT} />
+              <Text style={{ fontSize: 13, color: COLORS.TEXT_HINT }}>
+                탭하여 이미지 선택
+              </Text>
+            </View>
+          )}
+        </Pressable>
+      </View>
+
       {/* 동호회 이름 */}
       <View>
         <Text style={styles.label}>
@@ -119,44 +153,6 @@ export function ClubForm({ sportCategoryId, onSubmit, isLoading }: ClubFormProps
           )}
         />
         {errors.description && <Text style={styles.error}>{errors.description.message}</Text>}
-      </View>
-
-      {/* 모임 유형 */}
-      <View>
-        <Text style={styles.label}>모임 유형</Text>
-        <Controller
-          control={control}
-          name="club_type"
-          render={({ field: { value } }) => (
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {CLUB_TYPE_OPTIONS.map((option) => (
-                <Pressable
-                  key={option.value}
-                  onPress={() => setValue('club_type', option.value)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: value === option.value ? COLORS.PRIMARY : COLORS.BORDER,
-                    backgroundColor: value === option.value ? COLORS.PRIMARY_LIGHT : COLORS.SURFACE,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: value === option.value ? '600' : '400',
-                      color: value === option.value ? COLORS.PRIMARY : COLORS.TEXT_SECONDARY,
-                    }}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-        />
       </View>
 
       {/* 활동 지역 */}
@@ -310,5 +306,17 @@ const styles = {
     fontSize: 18,
     fontWeight: '600' as const,
     color: COLORS.TEXT_PRIMARY,
+  },
+  imagePicker: {
+    width: '100%' as const,
+    height: 180,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    borderStyle: 'dashed' as const,
+    backgroundColor: COLORS.SURFACE,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    overflow: 'hidden' as const,
   },
 };

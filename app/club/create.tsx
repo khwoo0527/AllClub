@@ -60,7 +60,7 @@ export default function CreateClubScreen() {
         {/* 폼 */}
         <ClubForm
           sportCategoryId={sportCategoryId}
-          onSubmit={(input) => createClub.mutate(input)}
+          onSubmit={(input, imageUri) => createClub.mutate({ input, imageUri })}
           isLoading={createClub.isPending}
         />
       </ScrollView>
