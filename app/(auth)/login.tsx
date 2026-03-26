@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { View, Text, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/features/auth';
+import { isInAppBrowser, openInExternalBrowser } from '@/shared/utils/browser';
 import {
   GOOGLE_BRAND_COLOR,
   GOOGLE_TEXT_COLOR,
@@ -12,6 +14,13 @@ import {
 
 export default function LoginScreen() {
   const { signInWithGoogle, signInWithKakao } = useAuth();
+
+  // 인앱 브라우저(카카오톡 등) 감지 시 즉시 외부 브라우저로 이동
+  useEffect(() => {
+    if (isInAppBrowser()) {
+      openInExternalBrowser();
+    }
+  }, []);
 
   const handleGoogleLogin = async () => {
     try {
