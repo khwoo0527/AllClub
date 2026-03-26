@@ -17,7 +17,7 @@
 
 - [ ] 테스트 자동화 기반 구축 — jest + @testing-library/react-native 설치, 설정, 첫 단위 테스트 작성
   - 발견: Sprint 1 리뷰 (2026-03-26)
-  - 비고: Sprint 2부터 DB 연동 시작 → 테스트와 함께 개발 필요
+  - **→ Sprint 2 Task 0 + Task 6에 포함 (2026-03-26)**
 
 ## 🟡 Normal
 
