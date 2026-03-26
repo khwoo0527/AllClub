@@ -1,13 +1,6 @@
-function getEnvVar(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    console.warn(`[CrewUp] 환경 변수 ${key}가 설정되지 않았습니다. Vercel Settings에서 확인하세요.`);
-    return '';
-  }
-  return value;
-}
-
+// Expo는 process.env.EXPO_PUBLIC_* 를 빌드 시 정적으로 치환한다.
+// 동적 접근(process.env[key])은 치환되지 않으므로 반드시 직접 참조해야 한다.
 export const env = {
-  supabaseUrl: getEnvVar('EXPO_PUBLIC_SUPABASE_URL'),
-  supabaseAnonKey: getEnvVar('EXPO_PUBLIC_SUPABASE_ANON_KEY'),
+  supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? '',
+  supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
 } as const;
