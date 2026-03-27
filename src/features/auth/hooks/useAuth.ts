@@ -97,8 +97,15 @@ export function useAuth() {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    // 초기 세션 로드
+    // 초기 세션 로드 (5초 타임아웃)
+    const timeout = setTimeout(() => {
+      console.warn('[Auth] getSession 타임아웃 — 로딩 해제');
+      useAuthStore.setState({ isLoading: false });
+    }, 5000);
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(timeout);
+      console.log('[Auth] getSession 완료, session:', !!session);
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
         useAuthStore.setState({
@@ -112,6 +119,10 @@ export function useAuth() {
       } else {
         useAuthStore.setState({ isLoading: false });
       }
+    }).catch((err) => {
+      clearTimeout(timeout);
+      console.error('[Auth] getSession 에러:', err);
+      useAuthStore.setState({ isLoading: false });
     });
 
     // 인증 상태 변경 감지
