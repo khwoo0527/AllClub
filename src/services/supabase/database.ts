@@ -3,6 +3,24 @@ import type { CreateClubInput, ClubWithDetails } from '@/features/club/types';
 import { MEMBER_ROLES } from '@/features/club/constants';
 
 /**
+ * 동호회 ID 목록의 멤버 수 조회
+ */
+async function fetchMemberCounts(clubIds: string[]): Promise<Record<string, number>> {
+  if (clubIds.length === 0) return {};
+  const { data } = await supabase
+    .from('club_members')
+    .select('club_id')
+    .in('club_id', clubIds)
+    .eq('status', 'active');
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    counts[row.club_id] = (counts[row.club_id] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/**
  * 공개 동호회 목록 조회 (sport_category 조인)
  */
 export async function fetchClubs(): Promise<ClubWithDetails[]> {
@@ -17,10 +35,13 @@ export async function fetchClubs(): Promise<ClubWithDetails[]> {
 
   if (error) throw new Error(`동호회 목록 조회 실패: ${error.message}`);
 
+  const clubIds = (data ?? []).map((c) => c.id);
+  const counts = await fetchMemberCounts(clubIds);
+
   return (data ?? []).map((club) => ({
     ...club,
     sport_category: club.sport_category as ClubWithDetails['sport_category'],
-    member_count: 0,
+    member_count: counts[club.id] ?? 0,
   }));
 }
 
@@ -39,10 +60,12 @@ export async function fetchClubById(clubId: string): Promise<ClubWithDetails> {
 
   if (error) throw new Error(`동호회 조회 실패: ${error.message}`);
 
+  const counts = await fetchMemberCounts([clubId]);
+
   return {
     ...data,
     sport_category: data.sport_category as ClubWithDetails['sport_category'],
-    member_count: 0,
+    member_count: counts[clubId] ?? 0,
   };
 }
 
@@ -62,10 +85,13 @@ export async function searchClubs(query: string): Promise<ClubWithDetails[]> {
 
   if (error) throw new Error(`동호회 검색 실패: ${error.message}`);
 
+  const clubIds = (data ?? []).map((c) => c.id);
+  const counts = await fetchMemberCounts(clubIds);
+
   return (data ?? []).map((club) => ({
     ...club,
     sport_category: club.sport_category as ClubWithDetails['sport_category'],
-    member_count: 0,
+    member_count: counts[club.id] ?? 0,
   }));
 }
 
@@ -98,6 +124,7 @@ export async function createClub(
       club_id: club.id,
       user_id: ownerId,
       role: MEMBER_ROLES.OWNER,
+      status: 'active',
     });
 
   if (memberError) throw new Error(`멤버 등록 실패: ${memberError.message}`);
@@ -145,15 +172,16 @@ export async function fetchMyClubs(userId: string): Promise<ClubWithDetails[]> {
 
   if (error) throw new Error(`내 동호회 조회 실패: ${error.message}`);
 
-  return (data ?? [])
-    .map((row) => {
-      const club = row.club as unknown as Record<string, unknown>;
-      if (!club) return null;
-      return {
-        ...club,
-        sport_category: club.sport_category as ClubWithDetails['sport_category'],
-        member_count: 0,
-      } as ClubWithDetails;
-    })
-    .filter((club): club is ClubWithDetails => club !== null);
+  const clubs = (data ?? [])
+    .map((row) => row.club as unknown as Record<string, unknown>)
+    .filter((club): club is Record<string, unknown> => club !== null);
+
+  const clubIds = clubs.map((c) => c.id as string);
+  const counts = await fetchMemberCounts(clubIds);
+
+  return clubs.map((club) => ({
+    ...club,
+    sport_category: club.sport_category as ClubWithDetails['sport_category'],
+    member_count: counts[club.id as string] ?? 0,
+  } as ClubWithDetails));
 }
