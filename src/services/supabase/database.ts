@@ -17,7 +17,6 @@ async function fetchMemberCounts(clubIds: string[]): Promise<Record<string, numb
     console.error('[fetchMemberCounts] 에러:', error.message);
     return {};
   }
-  console.log('[fetchMemberCounts] 결과:', data);
 
   const counts: Record<string, number> = {};
   for (const row of data ?? []) {
