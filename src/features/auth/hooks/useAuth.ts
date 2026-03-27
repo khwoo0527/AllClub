@@ -97,11 +97,11 @@ export function useAuth() {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    // 초기 세션 로드 (5초 타임아웃)
+    // 초기 세션 로드 (3초 타임아웃)
     const timeout = setTimeout(() => {
       console.warn('[Auth] getSession 타임아웃 — 로딩 해제');
       useAuthStore.setState({ isLoading: false });
-    }, 5000);
+    }, 3000);
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       clearTimeout(timeout);
@@ -138,7 +138,7 @@ export function useAuth() {
             isOnboarded: Boolean(profile?.nickname),
             isLoading: false,
           });
-        } else if (event === 'SIGNED_OUT') {
+        } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
           queryClient.clear();
           useAuthStore.setState({
             session: null,
