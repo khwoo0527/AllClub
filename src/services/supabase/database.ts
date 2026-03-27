@@ -1,6 +1,20 @@
 import { supabase } from './client';
 import type { CreateClubInput, ClubWithDetails } from '@/features/club/types';
-import { MEMBER_ROLES } from '@/features/club/constants';
+import { MEMBER_ROLES, MEMBER_STATUS } from '@/features/club/constants';
+
+/**
+ * 종목 카테고리 ID 조회 (이름 기준)
+ */
+export async function fetchSportCategoryId(name: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('sport_categories')
+    .select('id')
+    .eq('name', name)
+    .single();
+
+  if (error) throw new Error(`종목 카테고리 조회 실패: ${error.message}`);
+  return data.id;
+}
 
 /**
  * 동호회 ID 목록의 멤버 수 조회
@@ -11,7 +25,7 @@ async function fetchMemberCounts(clubIds: string[]): Promise<Record<string, numb
     .from('club_members')
     .select('club_id')
     .in('club_id', clubIds)
-    .eq('status', 'active');
+    .eq('status', MEMBER_STATUS.ACTIVE);
 
   if (error) {
     console.error('[fetchMemberCounts] 에러:', error.message);
@@ -129,7 +143,7 @@ export async function createClub(
       club_id: club.id,
       user_id: ownerId,
       role: MEMBER_ROLES.OWNER,
-      status: 'active',
+      status: MEMBER_STATUS.ACTIVE,
     });
 
   if (memberError) throw new Error(`멤버 등록 실패: ${memberError.message}`);
@@ -172,7 +186,7 @@ export async function checkClubMembership(
     .select('role')
     .eq('club_id', clubId)
     .eq('user_id', userId)
-    .eq('status', 'active')
+    .eq('status', MEMBER_STATUS.ACTIVE)
     .maybeSingle();
 
   if (error) {
@@ -192,7 +206,7 @@ export async function fetchMyClubs(userId: string): Promise<ClubWithDetails[]> {
     .from('club_members')
     .select('club_id')
     .eq('user_id', userId)
-    .eq('status', 'active');
+    .eq('status', MEMBER_STATUS.ACTIVE);
 
   if (memberError) throw new Error(`내 동호회 조회 실패: ${memberError.message}`);
   if (!members || members.length === 0) return [];

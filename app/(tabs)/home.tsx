@@ -12,7 +12,7 @@ import type { ClubWithDetails } from '@/features/club/types';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { clubs, isLoading, searchQuery, setSearchQuery } = useClubs();
+  const { clubs, isLoading, error, searchQuery, setSearchQuery } = useClubs();
 
   const renderItem = ({ item }: { item: ClubWithDetails }) => (
     <View style={{ padding: 6 }}>
@@ -66,6 +66,12 @@ export default function HomeScreen() {
         {/* 목록 */}
         {isLoading ? (
           <LoadingSpinner />
+        ) : error ? (
+          <EmptyState
+            icon="⚠️"
+            title="동호회 목록을 불러올 수 없습니다"
+            description="네트워크 연결을 확인하고 다시 시도해주세요."
+          />
         ) : clubs.length === 0 ? (
           <EmptyState
             icon="🔍"

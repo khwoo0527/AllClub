@@ -13,7 +13,7 @@ export function useClubDetail(clubId: string) {
 
   const { data: membership } = useQuery({
     queryKey: ['club-membership', clubId, user?.id],
-    queryFn: () => checkClubMembership(clubId, user!.id),
+    queryFn: () => checkClubMembership(clubId, user?.id ?? ''),
     enabled: !!clubId && !!user,
   });
 

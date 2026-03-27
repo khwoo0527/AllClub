@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Alert } from 'react-native';
+import { showAlert } from '@/shared/utils/alert';
 import { createClub } from '@/services/supabase/database';
 import { uploadClubImage } from '@/services/supabase/storage';
 import { supabase } from '@/services/supabase';
@@ -31,12 +31,12 @@ export function useCreateClub() {
     onSuccess: (club) => {
       queryClient.invalidateQueries({ queryKey: ['clubs'] });
       queryClient.invalidateQueries({ queryKey: ['my-clubs'] });
-      Alert.alert('완료', '동호회가 생성되었습니다!');
+      showAlert('완료', '동호회가 생성되었습니다!');
       router.replace(`/club/${club.id}`);
     },
     onError: (error: Error) => {
       console.error('[CreateClub] 생성 실패:', error);
-      Alert.alert('생성 실패', error.message);
+      showAlert('생성 실패', error.message);
     },
   });
 }

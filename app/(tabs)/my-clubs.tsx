@@ -11,7 +11,7 @@ import type { ClubWithDetails } from '@/features/club/types';
 
 export default function MyClubsScreen() {
   const router = useRouter();
-  const { myClubs, isLoading } = useMyClubs();
+  const { myClubs, isLoading, error } = useMyClubs();
 
   const renderItem = ({ item }: { item: ClubWithDetails }) => (
     <View style={{ padding: 6 }}>
@@ -55,6 +55,12 @@ export default function MyClubsScreen() {
         {/* 목록 */}
         {isLoading ? (
           <LoadingSpinner />
+        ) : error ? (
+          <EmptyState
+            icon="⚠️"
+            title="내 동호회를 불러올 수 없습니다"
+            description="네트워크 연결을 확인하고 다시 시도해주세요."
+          />
         ) : myClubs.length === 0 ? (
           <EmptyState
             icon="👥"

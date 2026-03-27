@@ -7,7 +7,7 @@ export function useMyClubs() {
 
   const { data: myClubs, isLoading, error } = useQuery({
     queryKey: ['my-clubs', user?.id],
-    queryFn: () => fetchMyClubs(user!.id),
+    queryFn: () => fetchMyClubs(user?.id ?? ''),
     enabled: !!user?.id,
   });
 
