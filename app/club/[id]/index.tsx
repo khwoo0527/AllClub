@@ -54,7 +54,7 @@ export default function ClubDetailScreen() {
           </Text>
         </View>
 
-        <ClubDetailHeader club={club} isMember={isMember} memberRole={memberRole} />
+        <ClubDetailHeader club={club} isMember={isMember} />
       </ScrollView>
     </SafeAreaView>
   );
