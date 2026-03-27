@@ -7,11 +7,17 @@ import { MEMBER_ROLES } from '@/features/club/constants';
  */
 async function fetchMemberCounts(clubIds: string[]): Promise<Record<string, number>> {
   if (clubIds.length === 0) return {};
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('club_members')
     .select('club_id')
     .in('club_id', clubIds)
     .eq('status', 'active');
+
+  if (error) {
+    console.error('[fetchMemberCounts] 에러:', error.message);
+    return {};
+  }
+  console.log('[fetchMemberCounts] 결과:', data);
 
   const counts: Record<string, number> = {};
   for (const row of data ?? []) {
@@ -159,29 +165,35 @@ export async function createClubMember(
  * 내가 가입한 동호회 목록
  */
 export async function fetchMyClubs(userId: string): Promise<ClubWithDetails[]> {
-  const { data, error } = await supabase
+  // 1단계: 내가 가입한 club_id 목록 조회
+  const { data: members, error: memberError } = await supabase
     .from('club_members')
-    .select(`
-      club:clubs(
-        *,
-        sport_category:sport_categories(*)
-      )
-    `)
+    .select('club_id')
     .eq('user_id', userId)
     .eq('status', 'active');
 
+  if (memberError) throw new Error(`내 동호회 조회 실패: ${memberError.message}`);
+  if (!members || members.length === 0) return [];
+
+  const clubIds = members.map((m) => m.club_id);
+
+  // 2단계: club_id로 동호회 정보 조회
+  const { data, error } = await supabase
+    .from('clubs')
+    .select(`
+      *,
+      sport_category:sport_categories(*)
+    `)
+    .in('id', clubIds)
+    .order('created_at', { ascending: false });
+
   if (error) throw new Error(`내 동호회 조회 실패: ${error.message}`);
 
-  const clubs = (data ?? [])
-    .map((row) => row.club as unknown as Record<string, unknown>)
-    .filter((club): club is Record<string, unknown> => club !== null);
-
-  const clubIds = clubs.map((c) => c.id as string);
   const counts = await fetchMemberCounts(clubIds);
 
-  return clubs.map((club) => ({
+  return (data ?? []).map((club) => ({
     ...club,
     sport_category: club.sport_category as ClubWithDetails['sport_category'],
-    member_count: counts[club.id as string] ?? 0,
-  } as ClubWithDetails));
+    member_count: counts[club.id] ?? 0,
+  }));
 }
