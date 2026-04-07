@@ -34,6 +34,181 @@ export type Database = {
   }
   public: {
     Tables: {
+      club_members: {
+        Row: {
+          attendance_count: number
+          attendance_rate: number | null
+          club_id: string
+          id: string
+          joined_at: string
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          attendance_count?: number
+          attendance_rate?: number | null
+          club_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          attendance_count?: number
+          attendance_rate?: number | null
+          club_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          club_type: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          district: string | null
+          city: string | null
+          id: string
+          is_public: boolean
+          is_recruiting: boolean
+          max_members: number
+          name: string
+          owner_id: string
+          region: string | null
+          sport_category_id: string
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          club_type?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          district?: string | null
+          city?: string | null
+          id?: string
+          is_public?: boolean
+          is_recruiting?: boolean
+          max_members?: number
+          name: string
+          owner_id: string
+          region?: string | null
+          sport_category_id: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          club_type?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          district?: string | null
+          city?: string | null
+          id?: string
+          is_public?: boolean
+          is_recruiting?: boolean
+          max_members?: number
+          name?: string
+          owner_id?: string
+          region?: string | null
+          sport_category_id?: string
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clubs_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clubs_sport_category_id_fkey"
+            columns: ["sport_category_id"]
+            isOneToOne: false
+            referencedRelation: "sport_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      join_requests: {
+        Row: {
+          club_id: string
+          created_at: string
+          id: string
+          message: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "join_requests_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "join_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "join_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -73,6 +248,36 @@ export type Database = {
           push_token?: string | null
           region?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sport_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
         }
         Relationships: []
       }

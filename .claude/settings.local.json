@@ -41,6 +41,7 @@
       "Bash(netstat -ano | findstr \":8081\")",
       "Bash(netstat -ano | findstr \"808\")",
       "Bash(cd \"F:/F폴더/테스트프로젝트/CrewUp\" && rm -rf .expo && npx expo start --web --clear 2>&1)",
+      "Bash(cd \"F:/F폴더/테스트프로젝트/CrewUp\" && cat .env.local 2>/dev/null | grep -v KEY | grep -v TOKEN | head -5; echo \"---\"; ls .env* 2>/dev/null)",
       "Bash(wc -l C:/Users/khwoo0527/Desktop/toy/claude-config/templates/designs/*.md | tail -1)",
       "Bash(S=/c/Users/khwoo0527/Desktop/toy/claude-config)",
       "Bash(T=/c/Users/khwoo0527/Desktop/toy/CrewUp/.claude)",
@@ -80,7 +81,9 @@
       "Bash(diff \"C:/Users/khwoo0527/Desktop/toy/claude-config/commands/sprint-dev.md\" \"C:/Users/khwoo0527/Desktop/toy/CrewUp/.claude/commands/sprint-dev.md\" 2>&1; echo \"EXIT:$?\")",
       "Bash(diff \"C:/Users/khwoo0527/Desktop/toy/claude-config/commands/design-review.md\" \"C:/Users/khwoo0527/Desktop/toy/CrewUp/.claude/commands/design-review.md\" 2>&1; echo \"EXIT:$?\")",
       "Bash(diff \"C:/Users/khwoo0527/Desktop/toy/claude-config/README.md\" \"C:/Users/khwoo0527/Desktop/toy/CrewUp/.claude/README.md\" 2>&1; echo \"EXIT:$?\")",
-      "Bash(diff \"C:/Users/khwoo0527/Desktop/toy/claude-config/settings.json\" \"C:/Users/khwoo0527/Desktop/toy/CrewUp/.claude/settings.json\" 2>&1; echo \"EXIT:$?\")"
+      "Bash(diff \"C:/Users/khwoo0527/Desktop/toy/claude-config/settings.json\" \"C:/Users/khwoo0527/Desktop/toy/CrewUp/.claude/settings.json\" 2>&1; echo \"EXIT:$?\")",
+      "Bash(cd C:/Users/khwoo0527/Desktop/toy/CrewUp && ls .claude/rules/*.md 2>&1)",
+      "Bash(cd C:/Users/khwoo0527/Desktop/toy/CrewUp && ls app/club/_layout.tsx app/club/create.tsx app/club/[id]/_layout.tsx app/club/[id]/index.tsx 2>&1)"
     ]
   }
 }

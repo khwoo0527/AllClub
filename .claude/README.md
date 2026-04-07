@@ -37,23 +37,64 @@ cp -r {기존프로젝트}/.claude/ {새프로젝트}/.claude/
 
 ### 3. 프로젝트 종속 데이터 초기화
 
-이전 프로젝트에서 복사했다면 아래 항목을 정리합니다:
+**중요:** .claude 폴더는 범용 프레임워크이므로 **프로젝트 종속 데이터가 포함되어서는 안 됩니다.**
+이전 프로젝트에서 복사해온 경우, 아래 항목을 반드시 초기화하세요.
 
-| 구분 | 파일/폴더 | 조치 |
-|:----:|-----------|------|
-| 🔄 | `agent-memory/**` | **초기화** — 이전 프로젝트 상태 리셋 |
-| 🔄 | `settings.local.json` | **확인** — 이전 권한/토큰 제거 |
-| ✅ | `rules/`, `agents/`, `commands/` | 유지 — 범용 |
-| ✅ | `memory/user_*.md`, `memory/feedback_*.md` | 유지 — 사용자 선호 |
+| 파일/폴더 | 종속성 | 새 프로젝트 시 조치 |
+|-----------|--------|-------------------|
+| `agent-memory/**` | 프로젝트 종속 | **내용 초기화** (에이전트 메모리 리셋) |
+| `memory/project_*.md` | 프로젝트 종속 | **삭제** (이전 프로젝트 정보) |
+| `settings.local.json` | 환경 종속 | **확인 후 정리** (이전 프로젝트 권한/토큰 제거) |
+| `rules/tech/{tech}.md` | 범용 (재사용) | 유지 — 다른 프로젝트에서도 재사용 |
+| `rules/workflow/*.md` | 범용 (재사용) | 유지 |
+| `agents/**`, `commands/**` | 범용 (재사용) | 유지 — 기술 스택 무관 |
+| `memory/user_*.md`, `memory/feedback_*.md` | 사용자 선호 (재사용) | 유지 — 작업 스타일 공통 |
+| `templates/**` | 범용 (재사용) | 유지 |
+| `README.md`, `settings.json` | 범용 (재사용) | 유지 |
 
-> **Tip**: Claude에게 "새 프로젝트 시작할 거야"라고 말하면 자동으로 정리를 제안합니다.
+> **원칙**: .claude 폴더 안에는 특정 프로젝트에서만 의미 있는 데이터를 넣지 않습니다.
+> `agent-memory/`는 에이전트가 프로젝트 진행 중 자동으로 기록하는 영역이므로, 새 프로젝트 시작 시 리셋이 필요합니다.
+
+**왜 리셋이 필요한가?**
+- `agent-memory/`에 이전 프로젝트의 Sprint 2 상태가 남으면, sprint-planner가 현재 프로젝트에서 Sprint 3부터 시작하려 할 수 있습니다
+- `settings.local.json`의 `allow` 배열에 이전 프로젝트의 API 토큰/키가 남으면 보안 위험입니다
+
+> **Tip**: Claude에게 "새 프로젝트 시작할 거야"라고 말하면, 프로젝트 종속 데이터를 확인하고 정리를 제안합니다.
 
 ### 4. 기술 스택 규칙 확인
 
 CLAUDE.md에 명시한 기술 스택의 `rules/tech/{tech}.md`가 있는지 확인합니다.
-없으면 Claude에게 생성을 요청하세요 — [RULES-TEMPLATE.md](templates/RULES-TEMPLATE.md) 기반으로 시니어 수준 규칙을 자동 생성합니다.
 
-### 5. 개발 시작!
+| 기술 스택 | 규칙 파일 | 상태 |
+|-----------|-----------|------|
+| TypeScript | `rules/tech/typescript.md` | 제공됨 |
+| React Native + Expo | `rules/tech/react-native.md` | 제공됨 |
+| Supabase | `rules/tech/supabase.md` | 제공됨 |
+| C# | `rules/tech/csharp.md` | 제공됨 |
+
+**규칙 파일이 없는 기술 스택이라면:**
+Claude에게 `rules/tech/{tech}.md`를 생성하도록 요청하세요 — [RULES-TEMPLATE.md](templates/RULES-TEMPLATE.md) 기반으로 시니어 수준 규칙을 자동 생성합니다.
+한번 생성하면 다음 프로젝트에서도 재사용됩니다 — 이것이 **범용성 확장**의 핵심입니다.
+
+### 5. 프로젝트 문서 작성 (필요 시)
+
+| 문서 | 용도 | 작성 시점 |
+|------|------|-----------|
+| `CLAUDE.md` | 프로젝트 정의 ([템플릿 보기](#-claudemd-템플릿)) | 프로젝트 시작 시 |
+| `DESIGN.md` | 디자인 시스템 (templates/designs/ 참조) | UI 작업 전 |
+| `ROADMAP.md` | Phase/Sprint 전체 로드맵 | `prd-to-roadmap` 에이전트로 생성 |
+| `docs/prd.md` | 요구사항 정의서 | 기능 개발 시작 전 |
+| `docs/phase/phase{N}.md` | Phase 상세 계획 | `phase-planner` 에이전트로 생성 |
+| `docs/sprint/sprint{N}.md` | Sprint 실행 명세 | `sprint-planner` 에이전트로 생성 |
+| `deploy.md` | 배포 기록 및 검증 결과 | 첫 스프린트 마무리 시 자동 생성 |
+
+### 6. settings.json 권한 설정 (선택)
+
+기본 `settings.json`에는 `cd`와 `git` 명령만 허용되어 있습니다.
+프로젝트 기술 스택에 맞는 빌드/테스트/린트 명령을 추가하면 매번 승인 없이 실행할 수 있습니다.
+([상세 설정 가이드](#-settingsjson-권한-설정))
+
+### 7. 개발 시작!
 
 ---
 
@@ -348,11 +389,15 @@ graph TD
 
 ## 📄 프로젝트 문서 구성
 
+> 상세 문서 목록과 작성 시점은 [Quick Start Step 5](#5-프로젝트-문서-작성-필요-시) 참조
+
 | 문서 | 용도 | 생성 방법 |
 |------|------|----------|
-| `CLAUDE.md` | 프로젝트 정의 (기술 스택, 빌드, 구조) | 수동 작성 |
+| `CLAUDE.md` | 프로젝트 정의 (기술 스택, 빌드, 구조) | 수동 작성 ([템플릿](#-claudemd-템플릿)) |
+| `DESIGN.md` | 디자인 시스템 | `project-init` 에이전트 (templates/designs/ 기반) |
 | `ROADMAP.md` | Phase/Sprint 전체 로드맵 | `prd-to-roadmap` 에이전트 |
 | `docs/prd.md` | 요구사항 정의서 | 수동 작성 ([가이드](rules/workflow/prd-guide.md)) |
+| `docs/backlog.md` | Product Backlog (리뷰 발견 이슈) | 수동 관리 |
 | `docs/phase/phase{N}.md` | Phase 상세 계획 | `phase-planner` 에이전트 |
 | `docs/sprint/sprint{N}.md` | Sprint 실행 명세 | `sprint-planner` 에이전트 |
 | `deploy.md` | 배포 기록 및 검증 결과 | 자동 생성 |
