@@ -11,7 +11,7 @@ paths:
 # React Native + Expo 개발 규칙
 
 > 이 파일은 React Native (Expo) 프로젝트에 범용적으로 적용되는 시니어 수준 규칙입니다.
-> TypeScript 기본 규칙은 `rules/typescript.md`를 참조합니다. 여기서는 React Native/Expo 특화 규칙만 다룹니다.
+> TypeScript 기본 규칙은 `rules/tech/typescript.md`를 참조합니다. 여기서는 React Native/Expo 특화 규칙만 다룹니다.
 > 프로젝트별 설정, 빌드 명령, 폴더 구조는 `/CLAUDE.md`에 정의합니다.
 
 ---
@@ -3240,3 +3240,48 @@ module.exports = function (api) {
 - CI/CD 파이프라인 설정
 - API 엔드포인트 및 인증 방식
 - maxWidth 상수 값 (MAX_FORM_WIDTH, MAX_CONTENT_WIDTH 등)
+
+---
+
+## 36. 실전 함정 & 지뢰
+
+> 실제 프로젝트에서 발견된 함정. 안티패턴과 다른 점: "정상적으로 보이지만 특정 조건에서 깨지는 것".
+
+| 증상 | 원인 | 해결 | 오답 (하지 말 것) |
+|------|------|------|-------------------|
+| 웹 새로고침(F5) 시 로그인 풀림 | Supabase Auth에 `storage: AsyncStorage` 설정 — 웹에서 AsyncStorage 미작동 | `Platform.OS === 'web' ? undefined : AsyncStorage`로 분기 | AsyncStorage를 웹 polyfill로 대체 (불필요한 복잡성) |
+| 탭 외 화면(상세 등)에서 탭바 미표시 | 탭바가 `(tabs)/_layout.tsx`에만 존재, Stack 네비게이션 밖 화면에는 적용 안 됨 | 커스텀 탭바 컴포넌트를 루트 레이아웃에 배치 또는 탭 내 중첩 네비게이션 | 모든 화면을 탭 안에 억지로 넣기 |
+| 모바일에서 탭바 하단 잘림 | SafeAreaView 처리 미흡 — 하단 안전 영역 미반영 | `useSafeAreaInsets()` + `paddingBottom: insets.bottom` | 고정 값 하드코딩 (기기마다 다름) |
+| `contentContainerClassName`으로 스타일 적용 시 웹에서 깨짐 | NativeWind의 contentContainerClassName은 웹에서 미지원 | `contentContainerStyle` 사용 | className으로 변경 시도 |
+| 이미지 피커 웹에서 크래시 | `expo-image-picker`의 `launchCameraAsync`는 웹 미지원 | `Platform.OS === 'web'`이면 `launchImageLibraryAsync`만 사용 | 카메라 기능을 웹에서도 시도 |
+
+---
+
+## 37. 검증 체크리스트
+
+### 새 화면 추가 시
+
+```
+- [ ] SafeAreaView 최상위 래핑 (flex: 1, backgroundColor)
+- [ ] maxWidth 제한 적용 (용도에 맞는 상수)
+- [ ] width: '100%' + alignSelf: 'center' 세트
+- [ ] 4가지 상태 처리 (로딩/에러/빈 데이터/정상)
+- [ ] 웹에서 확인 (npx expo start --web)
+- [ ] 모바일에서 확인 (SafeArea 잘림, 키보드 가림)
+- [ ] 인증 필요 여부 확인 (가드 처리)
+```
+
+### 배포 전 크로스 플랫폼 확인
+
+```
+- [ ] 웹: 로그인 → 새로고침 → 세션 유지 확인
+- [ ] 웹: 데스크톱 너비에서 레이아웃 정상
+- [ ] 모바일: 탭바 하단 잘림 없음
+- [ ] 모바일: 키보드 올라올 때 입력창 가림 없음
+- [ ] 모든 플랫폼: 핵심 CRUD 동작 확인
+```
+
+<!-- 개선 이력
+- 2026-03-27: 실전 함정 섹션 추가 — AsyncStorage 웹 세션 유실, 탭바 미표시/잘림 발견
+- 2026-03-27: 검증 체크리스트 추가 — 새 화면/배포 전 크로스 플랫폼 확인
+-->

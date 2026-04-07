@@ -92,7 +92,9 @@ CrewUp/
 ├── supabase/         # 마이그레이션, 시드 데이터, Edge Functions
 ├── assets/           # 이미지, 폰트
 ├── docs/             # PRD, Sprint 명세서
+├── .claude/          # AI 개발 프레임워크
 ├── CLAUDE.md         # 프로젝트 기술 정의
+├── DESIGN.md         # 디자인 시스템 (Cal.com 기반)
 └── ROADMAP.md        # 개발 로드맵
 ```
 
@@ -100,9 +102,9 @@ CrewUp/
 
 | Phase | 목표 | 상태 |
 |-------|------|------|
-| Phase 0 | 프로젝트 기반 구축 | 📋 예정 |
-| Phase 1 | 인증 시스템 | 📋 예정 |
-| Phase 2 | 동호회 관리 | 📋 예정 |
+| Phase 0 | 프로젝트 기반 구축 | ✅ 완료 |
+| Phase 1 | 인증 시스템 | ✅ 완료 |
+| Phase 2 | 동호회 관리 | 🔄 진행 중 |
 | Phase 3 | 일정 + 참석 시스템 | 📋 예정 |
 | Phase 4 | 알림 시스템 | 📋 예정 |
 | Phase 5 | MVP 완성 + 웹 배포 | 📋 예정 |
@@ -119,6 +121,7 @@ CrewUp/
 | 문서 | 설명 |
 |------|------|
 | [CLAUDE.md](CLAUDE.md) | 프로젝트 기술 정의 (기술 스택, 구조, 빌드 명령) |
+| [DESIGN.md](DESIGN.md) | 디자인 시스템 (Cal.com 기반 모노크롬) |
 | [ROADMAP.md](ROADMAP.md) | 10 Phase 개발 로드맵 |
 | [docs/prd.md](docs/prd.md) | 상세 요구사항 정의서 |
 | [.claude/README.md](.claude/README.md) | AI 개발 프레임워크 가이드 |

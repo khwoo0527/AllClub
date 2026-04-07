@@ -10,7 +10,7 @@ paths:
 # Supabase 개발 규칙
 
 > 이 파일은 Supabase(PostgreSQL + Auth + Realtime + Storage)를 백엔드로 사용하는 프로젝트에 범용적으로 적용되는 시니어 수준 규칙입니다.
-> TypeScript 기본 규칙은 `rules/typescript.md`, React Native 규칙은 `rules/react-native.md`를 참조합니다.
+> TypeScript 기본 규칙은 `rules/tech/typescript.md`, React Native 규칙은 `rules/tech/react-native.md`를 참조합니다.
 > 프로젝트별 설정, 테이블 스키마, RLS 정책은 `/CLAUDE.md`에 정의합니다.
 
 ## 핵심 원칙
@@ -47,7 +47,7 @@ src/
 │       └── ...
 supabase/
 ├── migrations/                 # 스키마 마이그레이션 파일
-│   ├── 20260326000000_create_clubs.sql
+│   ├── 20260326000000_create_teams.sql
 │   ├── 20260326000001_create_members.sql
 │   └── ...
 ├── seed.sql                    # 초기 데이터 (개발용)
@@ -71,24 +71,24 @@ supabase/
 
 | 종류 | 컨벤션 | 예시 |
 |------|--------|------|
-| 테이블명 | snake_case, 복수형 | `clubs`, `club_members`, `schedule_events` |
-| 컬럼명 | snake_case | `created_at`, `club_id`, `max_participants` |
-| 외래 키 | `{참조테이블_단수}_id` | `club_id`, `user_id`, `event_id` |
-| 인덱스 | `idx_{테이블}_{컬럼}` | `idx_events_club_id`, `idx_members_user_id` |
-| RLS 정책 | `{동작}_{대상}_{조건}` | `select_own_clubs`, `insert_club_admin_only` |
-| Enum 타입 | snake_case | `user_role`, `event_status` |
+| 테이블명 | snake_case, 복수형 | `teams`, `team_members`, `tasks` |
+| 컬럼명 | snake_case | `created_at`, `team_id`, `max_capacity` |
+| 외래 키 | `{참조테이블_단수}_id` | `team_id`, `user_id`, `task_id` |
+| 인덱스 | `idx_{테이블}_{컬럼}` | `idx_tasks_team_id`, `idx_members_user_id` |
+| RLS 정책 | `{동작}_{대상}_{조건}` | `select_own_teams`, `insert_admin_only` |
+| Enum 타입 | snake_case | `user_role`, `task_status` |
 | 함수/트리거 | snake_case, 동사로 시작 | `handle_new_user`, `update_member_count` |
 
 ### TypeScript 코드
 
 | 종류 | 컨벤션 | 예시 |
 |------|--------|------|
-| 쿼리 함수 | `fetch`, `create`, `update`, `delete` + 대상 | `fetchClubMembers`, `createEvent`, `updateAttendance` |
-| 구독 함수 | `subscribeTo` + 대상 | `subscribeToEventChanges`, `subscribeToClubNotifications` |
-| 훅 | `use` + 대상 | `useClubMembers`, `useRealtimeEvents` |
-| 타입 (DB 행) | PascalCase, `Row` 접미어 생략 | `Club`, `Member`, `ScheduleEvent` |
-| 타입 (삽입) | `Create` + 대상 + `Input` | `CreateClubInput`, `CreateEventInput` |
-| 타입 (수정) | `Update` + 대상 + `Input` | `UpdateClubInput`, `UpdateEventInput` |
+| 쿼리 함수 | `fetch`, `create`, `update`, `delete` + 대상 | `fetchTeamMembers`, `createTask`, `updateStatus` |
+| 구독 함수 | `subscribeTo` + 대상 | `subscribeToTaskChanges`, `subscribeToNotifications` |
+| 훅 | `use` + 대상 | `useTeamMembers`, `useRealtimeTasks` |
+| 타입 (DB 행) | PascalCase, `Row` 접미어 생략 | `Team`, `Member`, `Task` |
+| 타입 (삽입) | `Create` + 대상 + `Input` | `CreateTeamInput`, `CreateTaskInput` |
+| 타입 (수정) | `Update` + 대상 + `Input` | `UpdateTeamInput`, `UpdateTaskInput` |
 
 ---
 
@@ -97,6 +97,7 @@ supabase/
 ```typescript
 // services/supabase/client.ts
 import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Database } from './types';
 
@@ -105,10 +106,11 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,        // React Native에서 세션 유지
-    autoRefreshToken: true,       // 토큰 자동 갱신
-    persistSession: true,         // 세션 영속화
-    detectSessionInUrl: false,    // React Native에서는 false
+    // ⚠️ 웹에서는 undefined (localStorage 사용), 네이티브에서만 AsyncStorage
+    storage: Platform.OS === 'web' ? undefined : AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: Platform.OS === 'web',  // 웹에서는 true (OAuth 콜백 URL 감지)
   },
 });
 ```
@@ -119,7 +121,15 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 - `supabaseUrl`과 `supabaseAnonKey`는 **환경 변수**로 관리
 - `service_role` 키는 클라이언트 코드에 **절대 포함하지 않는다**
 - `Database` 제네릭 타입을 반드시 전달하여 타입 안전성 확보
-- React Native에서는 `AsyncStorage`를 auth storage로 설정
+
+### 🔴 플랫폼별 Auth 설정 (실전 함정)
+
+| 설정 | 웹 | React Native |
+|------|-----|-------------|
+| `storage` | `undefined` (localStorage) | `AsyncStorage` |
+| `detectSessionInUrl` | `true` | `false` |
+
+**함정**: `storage: AsyncStorage`를 웹에서도 사용하면 **새로고침(F5) 시 세션이 유실**된다. AsyncStorage는 RN 전용이며 웹에서 정상 동작하지 않는다. 반드시 `Platform.OS`로 분기한다.
 
 ---
 
@@ -135,20 +145,20 @@ npx supabase gen types typescript --local > src/services/supabase/types.ts
 import type { Database } from './types';
 
 // Row 타입 (SELECT 결과)
-type Club = Database['public']['Tables']['clubs']['Row'];
-type Member = Database['public']['Tables']['club_members']['Row'];
-type ScheduleEvent = Database['public']['Tables']['schedule_events']['Row'];
+type Team = Database['public']['Tables']['teams']['Row'];
+type Member = Database['public']['Tables']['team_members']['Row'];
+type Task = Database['public']['Tables']['tasks']['Row'];
 
 // Insert 타입 (INSERT 입력)
-type CreateClubInput = Database['public']['Tables']['clubs']['Insert'];
+type CreateTeamInput = Database['public']['Tables']['teams']['Insert'];
 
 // Update 타입 (UPDATE 입력)
-type UpdateClubInput = Database['public']['Tables']['clubs']['Update'];
+type UpdateTeamInput = Database['public']['Tables']['teams']['Update'];
 
 // 커스텀 타입 (조인 결과 등)
-type EventWithAttendees = ScheduleEvent & {
-  attendees: Member[];
-  attendee_count: number;
+type TaskWithAssignees = Task & {
+  assignees: Member[];
+  assignee_count: number;
 };
 ```
 
@@ -167,68 +177,68 @@ type EventWithAttendees = ScheduleEvent & {
 
 ```typescript
 // SELECT — 목록 조회
-async function fetchClubEvents(clubId: string): Promise<ScheduleEvent[]> {
+async function fetchTeamTasks(teamId: string): Promise<Task[]> {
   const { data, error } = await supabase
-    .from('schedule_events')
+    .from('tasks')
     .select('*')
-    .eq('club_id', clubId)
-    .order('date', { ascending: true });
+    .eq('team_id', teamId)
+    .order('due_date', { ascending: true });
 
-  if (error) throw new AppError(error.message, 'FETCH_EVENTS', '일정을 불러올 수 없습니다.');
+  if (error) throw new AppError(error.message, 'FETCH_TASKS', '목록을 불러올 수 없습니다.');
   return data;
 }
 
 // SELECT — 단건 조회
-async function fetchEventById(eventId: string): Promise<EventWithAttendees> {
+async function fetchTaskById(taskId: string): Promise<TaskWithAssignees> {
   const { data, error } = await supabase
-    .from('schedule_events')
+    .from('tasks')
     .select(`
       *,
-      attendees:event_attendees(
+      assignees:task_assignees(
         *,
-        member:club_members(*)
+        member:team_members(*)
       )
     `)
-    .eq('id', eventId)
+    .eq('id', taskId)
     .single();
 
-  if (error) throw new NotFoundError('일정', eventId);
+  if (error) throw new NotFoundError('항목', taskId);
   return data;
 }
 
 // INSERT
-async function createEvent(input: CreateEventInput): Promise<ScheduleEvent> {
+async function createTask(input: CreateTaskInput): Promise<Task> {
   const { data, error } = await supabase
-    .from('schedule_events')
+    .from('tasks')
     .insert(input)
     .select()       // insert 후 생성된 행 반환
     .single();
 
-  if (error) throw new AppError(error.message, 'CREATE_EVENT', '일정 생성에 실패했습니다.');
+  if (error) throw new AppError(error.message, 'CREATE_TASK', '생성에 실패했습니다.');
   return data;
 }
 
 // UPDATE
-async function updateEvent(eventId: string, input: UpdateEventInput): Promise<ScheduleEvent> {
+async function updateTask(taskId: string, input: UpdateTaskInput): Promise<Task> {
   const { data, error } = await supabase
-    .from('schedule_events')
+    .from('tasks')
     .update(input)
-    .eq('id', eventId)
+    .eq('id', taskId)
     .select()
     .single();
 
-  if (error) throw new AppError(error.message, 'UPDATE_EVENT', '일정 수정에 실패했습니다.');
+  if (error) throw new AppError(error.message, 'UPDATE_TASK', '수정에 실패했습니다.');
   return data;
 }
 
 // DELETE
-async function deleteEvent(eventId: string): Promise<void> {
+async function deleteTask(taskId: string): Promise<void> {
   const { error } = await supabase
-    .from('schedule_events')
+    .from('tasks')
     .delete()
-    .eq('id', eventId);
+    .eq('id', taskId);
 
-  if (error) throw new AppError(error.message, 'DELETE_EVENT', '일정 삭제에 실패했습니다.');
+  if (error) throw new AppError(error.message, 'DELETE_TASK', '삭제에 실패했습니다.');
 }
 ```
 
@@ -246,25 +256,25 @@ async function deleteEvent(eventId: string): Promise<void> {
 ```typescript
 // 관계 데이터 함께 조회 (foreign key 기반)
 const { data } = await supabase
-  .from('clubs')
+  .from('teams')
   .select(`
     id,
     name,
-    members:club_members(
+    members:team_members(
       id,
       user_id,
       role,
       profile:profiles(name, avatar_url)
     )
   `)
-  .eq('id', clubId)
+  .eq('id', teamId)
   .single();
 
 // 집계 (count)
 const { count } = await supabase
-  .from('club_members')
+  .from('team_members')
   .select('*', { count: 'exact', head: true })
-  .eq('club_id', clubId);
+  .eq('team_id', teamId);
 ```
 
 ---
@@ -351,43 +361,43 @@ function useAuth() {
 
 ```sql
 -- 모든 테이블에 RLS 활성화 (필수!)
-ALTER TABLE clubs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 
--- SELECT: 동호회 멤버만 조회 가능
-CREATE POLICY "select_club_members_only"
-  ON schedule_events FOR SELECT
+-- SELECT: 팀 멤버만 조회 가능
+CREATE POLICY "select_team_members_only"
+  ON tasks FOR SELECT
   USING (
-    club_id IN (
-      SELECT club_id FROM club_members
+    team_id IN (
+      SELECT team_id FROM team_members
       WHERE user_id = auth.uid()
     )
   );
 
--- INSERT: 동호회 운영진만 생성 가능
-CREATE POLICY "insert_club_admin_only"
-  ON schedule_events FOR INSERT
+-- INSERT: 관리자만 생성 가능
+CREATE POLICY "insert_admin_only"
+  ON tasks FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM club_members
-      WHERE club_id = NEW.club_id
+      SELECT 1 FROM team_members
+      WHERE team_id = NEW.team_id
         AND user_id = auth.uid()
         AND role IN ('admin', 'owner')
     )
   );
 
 -- UPDATE: 본인이 생성한 것만 수정 가능
-CREATE POLICY "update_own_events"
-  ON schedule_events FOR UPDATE
+CREATE POLICY "update_own_tasks"
+  ON tasks FOR UPDATE
   USING (created_by = auth.uid())
   WITH CHECK (created_by = auth.uid());
 
--- DELETE: 동호회 소유자만 삭제 가능
-CREATE POLICY "delete_club_owner_only"
-  ON schedule_events FOR DELETE
+-- DELETE: 소유자만 삭제 가능
+CREATE POLICY "delete_owner_only"
+  ON tasks FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM club_members
-      WHERE club_id = schedule_events.club_id
+      SELECT 1 FROM team_members
+      WHERE team_id = tasks.team_id
         AND user_id = auth.uid()
         AND role = 'owner'
     )
@@ -403,25 +413,89 @@ CREATE POLICY "delete_club_owner_only"
 - 복잡한 정책은 **PostgreSQL 함수**로 분리하여 재사용
 - RLS 정책에 **성능 주의**: 서브쿼리가 모든 행마다 실행되므로, 인덱스 필수
 
+### 🔴 RLS 실전 함정 & 지뢰
+
+| 증상 | 원인 | 해결 | 오답 (하지 말 것) |
+|------|------|------|-------------------|
+| 중첩 조인 쿼리 시 PostgREST 500 에러 | RLS 정책의 서브쿼리가 **같은 테이블을 참조**(재귀) | 정책에 `user_id = auth.uid()` 등 단순 조건 추가, 또는 쿼리를 2단계로 분리 | `SECURITY DEFINER` 함수로 RLS 우회 |
+| 임베디드 집계(`table(count)`) + RLS = 500 | PostgREST가 RLS 정책을 적용하면서 집계 서브쿼리와 충돌 | 집계를 별도 쿼리로 분리 (FK 컬럼만 SELECT 후 코드에서 카운트) | count를 아예 제거하거나 RLS 비활성화 |
+| INSERT 후 데이터가 조회 안 됨 | 상태 컬럼(status 등)에 **기본값이 없어** NULL 저장 → `.eq('status', 'active')` 필터에 안 걸림 | DB 컬럼에 `DEFAULT 'active'` 설정 + INSERT 시 명시적으로 값 지정 | 필터를 제거하거나 NULL 체크 추가 |
+| 다른 테이블 조인 시 빈 배열 반환 | 참조하는 테이블의 RLS 정책이 현재 사용자 접근을 차단 | 참조 테이블의 RLS 정책 확인 및 필요한 SELECT 정책 추가 | 모든 정책을 `USING (true)`로 변경 |
+
+#### 재귀 RLS 정책 상세 설명
+
+```sql
+-- ❌ 위험: 멤버십 테이블의 SELECT 정책에서 같은 테이블을 다시 참조 (재귀)
+CREATE POLICY "select_same_group"
+  ON group_members FOR SELECT
+  USING (
+    group_id IN (
+      SELECT group_id FROM group_members  -- ← 같은 테이블! 재귀 서브쿼리!
+      WHERE user_id = auth.uid()
+    )
+  );
+
+-- ✅ 안전: 자기 자신의 행만 직접 조건으로 확인
+CREATE POLICY "select_own_memberships"
+  ON group_members FOR SELECT
+  USING (user_id = auth.uid());
+
+-- ✅ 다른 멤버도 보려면: 별도 정책 추가 (부모 테이블 참조, 같은 테이블 재참조 아님)
+CREATE POLICY "select_public_group_members"
+  ON group_members FOR SELECT
+  USING (
+    group_id IN (
+      SELECT id FROM groups WHERE is_public = true
+    )
+    OR user_id = auth.uid()
+  );
+```
+
+#### 2단계 쿼리 패턴 (중첩 조인 대안)
+
+```typescript
+// ❌ 위험: RLS가 있는 테이블을 통해 중첩 조인
+const { data } = await supabase
+  .from('group_members')
+  .select('group:groups(*, category:categories(*))')
+  .eq('user_id', userId);
+
+// ✅ 안전: 2단계 쿼리로 분리
+// Step 1: FK 목록만 가져오기
+const { data: memberships } = await supabase
+  .from('group_members')
+  .select('group_id')
+  .eq('user_id', userId)
+  .eq('status', 'active');
+
+const groupIds = memberships?.map(m => m.group_id) ?? [];
+
+// Step 2: 부모 테이블에서 직접 조회 (RLS 충돌 없음)
+const { data: groups } = await supabase
+  .from('groups')
+  .select('*, category:categories(*)')
+  .in('id', groupIds);
+```
+
 ---
 
 ## Realtime 구독
 
 ```typescript
 // 테이블 변경 구독
-function subscribeToEventChanges(clubId: string, callback: (event: ScheduleEvent) => void) {
+function subscribeToTaskChanges(teamId: string, callback: (task: Task) => void) {
   const channel = supabase
-    .channel(`events:${clubId}`)
+    .channel(`tasks:${teamId}`)
     .on(
       'postgres_changes',
       {
         event: '*',           // INSERT, UPDATE, DELETE 모두
         schema: 'public',
-        table: 'schedule_events',
-        filter: `club_id=eq.${clubId}`,
+        table: 'tasks',
+        filter: `team_id=eq.${teamId}`,
       },
       (payload) => {
-        callback(payload.new as ScheduleEvent);
+        callback(payload.new as Task);
       },
     )
     .subscribe();
@@ -433,17 +507,17 @@ function subscribeToEventChanges(clubId: string, callback: (event: ScheduleEvent
 }
 
 // React 훅으로 감싸기
-function useRealtimeEvents(clubId: string) {
+function useRealtimeTasks(teamId: string) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const unsubscribe = subscribeToEventChanges(clubId, () => {
+    const unsubscribe = subscribeToTaskChanges(teamId, () => {
       // 변경 감지 시 react-query 캐시 무효화 → 자동 refetch
-      queryClient.invalidateQueries({ queryKey: ['events', clubId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', teamId] });
     });
 
     return unsubscribe;
-  }, [clubId, queryClient]);
+  }, [teamId, queryClient]);
 }
 ```
 
@@ -453,7 +527,7 @@ function useRealtimeEvents(clubId: string) {
 - `filter`를 사용하여 **필요한 데이터만** 구독 — 전체 테이블 구독 금지
 - 대량 업데이트가 예상되면 **디바운스** 적용
 - Realtime은 **UI 갱신 트리거**로 사용 — 데이터 자체는 react-query가 관리
-- 채널 이름에 고유 식별자 포함 (`events:${clubId}`)
+- 채널 이름에 고유 식별자 포함 (`tasks:${teamId}`)
 
 ---
 
@@ -461,7 +535,7 @@ function useRealtimeEvents(clubId: string) {
 
 ```bash
 # 마이그레이션 생성
-npx supabase migration new create_clubs
+npx supabase migration new create_teams
 
 # 마이그레이션 적용 (로컬)
 npx supabase db reset
@@ -471,37 +545,37 @@ npx supabase migration list
 ```
 
 ```sql
--- supabase/migrations/20260326000000_create_clubs.sql
+-- supabase/migrations/20260326000000_create_teams.sql
 
 -- 테이블 생성
-CREATE TABLE clubs (
+CREATE TABLE teams (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
-  sport_type TEXT NOT NULL DEFAULT 'tennis',
+  category TEXT NOT NULL DEFAULT 'general',
   owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  max_members INTEGER NOT NULL DEFAULT 50,
+  max_capacity INTEGER NOT NULL DEFAULT 50,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 인덱스
-CREATE INDEX idx_clubs_owner_id ON clubs(owner_id);
-CREATE INDEX idx_clubs_sport_type ON clubs(sport_type);
+CREATE INDEX idx_teams_owner_id ON teams(owner_id);
+CREATE INDEX idx_teams_category ON teams(category);
 
 -- RLS 활성화
-ALTER TABLE clubs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
 
 -- RLS 정책
-CREATE POLICY "select_public_clubs" ON clubs
-  FOR SELECT USING (true);  -- 동호회 목록은 누구나 조회 가능
+CREATE POLICY "select_public_teams" ON teams
+  FOR SELECT USING (true);  -- 공개 목록은 누구나 조회 가능
 
-CREATE POLICY "insert_authenticated" ON clubs
+CREATE POLICY "insert_authenticated" ON teams
   FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
 -- updated_at 자동 갱신 트리거
 CREATE TRIGGER set_updated_at
-  BEFORE UPDATE ON clubs
+  BEFORE UPDATE ON teams
   FOR EACH ROW
   EXECUTE FUNCTION moddatetime(updated_at);
 ```
@@ -540,7 +614,7 @@ async function uploadProfileImage(userId: string, file: Blob): Promise<string> {
 
 ### Storage 규칙
 
-- 버킷은 **용도별** 분리 (`avatars`, `club-images`, `documents`)
+- 버킷은 **용도별** 분리 (`avatars`, `uploads`, `documents`)
 - 파일 경로에 **사용자 ID** 포함 — RLS 정책으로 본인 파일만 접근
 - 업로드 시 **파일 크기, MIME 타입 검증** — Storage 정책에서 설정
 - 이미지는 업로드 전 **리사이즈** (원본 4K 금지)
@@ -561,13 +635,13 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, // 서버에서만 service_role 사용
   );
 
-  const { clubId, message } = await req.json();
+  const { teamId, message } = await req.json();
 
-  // 동호회 멤버 조회
+  // 팀 멤버 조회
   const { data: members } = await supabase
-    .from('club_members')
+    .from('team_members')
     .select('push_token')
-    .eq('club_id', clubId)
+    .eq('team_id', teamId)
     .not('push_token', 'is', null);
 
   // 푸시 알림 발송 로직
@@ -593,36 +667,38 @@ serve(async (req) => {
 
 ### 보안 관련
 
-| 안티패턴 | 이유 | 대안 |
-|---------|------|------|
-| `service_role` 키를 클라이언트에 포함 | 모든 RLS를 우회 → 전체 DB 노출 | `anon` 키만 클라이언트에, `service_role`은 서버에서만 |
-| RLS를 비활성화한 채 배포 | 모든 사용자가 모든 데이터에 접근 | 모든 테이블에 RLS 필수 |
-| 클라이언트에서 `.rpc()` 없이 복잡한 비즈니스 로직 | 클라이언트 조작 가능 | Edge Function 또는 DB 함수 사용 |
-| 토큰을 AsyncStorage에 저장 | 암호화 안 됨 | `expo-secure-store` 사용 |
+| 안티패턴 | 실패 결과 | 대안 |
+|---------|----------|------|
+| `service_role` 키를 클라이언트에 포함 | 모든 RLS 우회 → 전체 DB가 브라우저 DevTools에서 노출 | `anon` 키만 클라이언트에, `service_role`은 서버에서만 |
+| RLS를 비활성화한 채 배포 | 누구든 URL 조작으로 모든 데이터 조회/수정/삭제 가능 | 모든 테이블에 RLS 필수 |
+| `SECURITY DEFINER` 함수로 RLS 우회 | RLS 보안 모델 전체가 무력화, 어떤 사용자든 모든 데이터 접근 | RLS 정책 자체를 올바르게 수정 |
+| 토큰을 AsyncStorage에 저장 | 루팅된 기기에서 토큰 탈취 가능 | `expo-secure-store` 사용 |
 
 ### 쿼리 관련
 
-| 안티패턴 | 이유 | 대안 |
-|---------|------|------|
-| `select('*')` 모든 곳에서 사용 | 불필요한 데이터 전송 | 필요한 컬럼만 지정 |
-| `.single()` 없이 단건 조회 | 배열이 반환되어 혼란 | 단건은 `.single()` 필수 |
-| error를 체크하지 않음 | 조용한 실패 → 디버깅 지옥 | `if (error) throw` 패턴 |
-| 대시보드에서 직접 SQL 수정 (프로덕션) | 마이그레이션과 불일치 | 마이그레이션 파일 사용 |
-| 인덱스 없이 `.eq()` 필터 | 대용량 테이블에서 풀 스캔 | 자주 쿼리하는 컬럼에 인덱스 |
-| 전체 테이블 조회 (페이지네이션 없음) | 메모리 폭발, 느림 | `.range()` 또는 커서 페이지네이션 |
+| 안티패턴 | 실패 결과 | 대안 |
+|---------|----------|------|
+| RLS 테이블에서 임베디드 집계 `related_table(count)` | PostgREST 500 에러 (RLS + 집계 서브쿼리 충돌) | 별도 count 쿼리로 분리 |
+| RLS 테이블 통해 중첩 조인 | PostgREST 500 에러 (RLS 재귀 서브쿼리) | 2단계 쿼리로 분리 |
+| status 컬럼에 DB 기본값 미설정 | INSERT 시 NULL → `.eq('status', 'active')` 필터에 안 걸림 → 데이터 "증발" | `DEFAULT 'active'` 설정 + INSERT 시 명시 |
+| `.single()` 없이 단건 조회 | 배열이 반환되어 `data.name` 접근 시 undefined | 단건은 `.single()` 필수 |
+| error를 체크하지 않음 | 조용한 실패 → 사용자에게 빈 화면 표시 → 디버깅 지옥 | `if (error) throw` 패턴 |
+| 인덱스 없이 자주 쓰는 필터 컬럼 | 대용량 테이블에서 풀 스캔 → 타임아웃 | 자주 쿼리하는 컬럼에 인덱스 |
+| 전체 테이블 조회 (페이지네이션 없음) | 수만 행 → 메모리 폭발, 네트워크 타임아웃 | `.range()` 또는 커서 페이지네이션 |
 
 ### AI가 흔히 생성하는 실수
 
-| 실수 | 수정 방법 |
-|------|----------|
-| `createClient`를 컴포넌트마다 호출 | 싱글톤 `client.ts`에서 한번만 생성 |
-| 타입을 수동 정의 | `supabase gen types`로 자동 생성 |
-| RLS 정책 없이 테이블 생성 | 마이그레이션에 RLS 활성화 + 정책 포함 |
-| `onAuthStateChange` cleanup 누락 | `return () => subscription.unsubscribe()` |
-| Realtime 구독 cleanup 누락 | `return () => supabase.removeChannel(channel)` |
-| insert 후 `select()` 빠뜨림 | `.insert(data).select().single()` |
-| 환경 변수를 코드에 하드코딩 | `.env` + `EXPO_PUBLIC_` 접두어 |
-| `service_role` 키를 프론트엔드에 사용 | `anon` 키만 프론트에서 사용 |
+| 실수 | 실패 결과 | 수정 방법 |
+|------|----------|----------|
+| `storage: AsyncStorage` 웹에서도 사용 | 웹 새로고침 시 세션 유실 → 로그인 반복 | `Platform.OS === 'web' ? undefined : AsyncStorage` |
+| `detectSessionInUrl: false` 웹에서 설정 | OAuth 콜백 처리 안 됨 → 소셜 로그인 실패 | `Platform.OS === 'web'`으로 분기 |
+| RLS 테이블을 통해 부모 테이블 중첩 조인 | RLS 재귀로 PostgREST 500 | 2단계 쿼리로 분리 |
+| `createClient`를 컴포넌트마다 호출 | 다중 연결 → 세션 불일치 | 싱글톤 `client.ts`에서 한번만 생성 |
+| 타입을 수동 정의 | 스키마 변경 시 타입 불일치 → 런타임 에러 | `supabase gen types`로 자동 생성 |
+| RLS 정책 없이 테이블 생성 | 전체 데이터 노출 | 마이그레이션에 RLS 활성화 + 정책 포함 |
+| insert 시 status 등 필수 필터 컬럼 누락 | NULL 저장 → 조회 누락 | INSERT에 모든 필터 대상 컬럼 명시 |
+| `onAuthStateChange` cleanup 누락 | 메모리 릭, 이중 이벤트 처리 | `return () => subscription.unsubscribe()` |
+| insert 후 `select()` 빠뜨림 | 생성된 행 데이터 없음 → UI 갱신 불가 | `.insert(data).select().single()` |
 
 ---
 
@@ -649,14 +725,14 @@ function handleSupabaseError(error: PostgrestError, context: string): never {
 }
 
 // 사용
-async function fetchClub(clubId: string): Promise<Club> {
+async function fetchTeam(teamId: string): Promise<Team> {
   const { data, error } = await supabase
-    .from('clubs')
+    .from('teams')
     .select('*')
-    .eq('id', clubId)
+    .eq('id', teamId)
     .single();
 
-  if (error) handleSupabaseError(error, 'fetchClub');
+  if (error) handleSupabaseError(error, 'fetchTeam');
   return data;
 }
 ```
@@ -711,7 +787,7 @@ jest.mock('@/services/supabase/client', () => ({
     select: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue({
-      data: mockClub,
+      data: mockTeam,
       error: null,
     }),
     auth: {
@@ -724,15 +800,15 @@ jest.mock('@/services/supabase/client', () => ({
 }));
 
 // 쿼리 함수 테스트
-describe('fetchClub', () => {
-  it('동호회 정보를 정상적으로 반환한다', async () => {
-    const club = await fetchClub('club-123');
-    expect(club.name).toBe('TenniSweet');
+describe('fetchTeam', () => {
+  it('팀 정보를 정상적으로 반환한다', async () => {
+    const team = await fetchTeam('team-123');
+    expect(team.name).toBe('Test Team');
   });
 
-  it('존재하지 않는 동호회는 에러를 던진다', async () => {
+  it('존재하지 않는 항목은 에러를 던진다', async () => {
     mockSupabaseError('PGRST116');
-    await expect(fetchClub('invalid')).rejects.toThrow(AppError);
+    await expect(fetchTeam('invalid')).rejects.toThrow(AppError);
   });
 });
 ```
@@ -754,12 +830,12 @@ describe('fetchClub', () => {
 
 ```sql
 -- Good: 마이그레이션에 목적과 주의사항 명시
--- 동호회 일정 테이블 생성
--- 참고: event_attendees와 1:N 관계, cascade 삭제
-CREATE TABLE schedule_events ( ... );
+-- 팀 작업 테이블 생성
+-- 참고: task_assignees와 1:N 관계, cascade 삭제
+CREATE TABLE tasks ( ... );
 
 -- Bad: 주석 없는 마이그레이션
-CREATE TABLE schedule_events ( ... );
+CREATE TABLE tasks ( ... );
 ```
 
 ### 쿼리 함수
@@ -767,14 +843,14 @@ CREATE TABLE schedule_events ( ... );
 ```typescript
 // Good: 복잡한 쿼리에 비즈니스 규칙 설명
 /**
- * 사용자가 참석 가능한 일정 목록 조회.
- * 이미 마감된 일정은 제외하고, 정원 미달인 일정만 반환한다.
+ * 사용자가 참여 가능한 작업 목록 조회.
+ * 이미 마감된 항목은 제외하고, 정원 미달인 항목만 반환한다.
  */
-async function fetchAvailableEvents(clubId: string): Promise<ScheduleEvent[]> { ... }
+async function fetchAvailableTasks(teamId: string): Promise<Task[]> { ... }
 
 // Bad: 단순 CRUD에 불필요한 주석
-/** 동호회 조회 */
-async function fetchClub(id: string): Promise<Club> { ... }
+/** 팀 조회 */
+async function fetchTeam(id: string): Promise<Team> { ... }
 ```
 
 ---
@@ -840,6 +916,59 @@ npx supabase gen types typescript --local > src/services/supabase/types.ts
 
 ---
 
+## 검증 체크리스트
+
+### 새 테이블 생성 시
+
+```
+- [ ] RLS 활성화 (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY`)
+- [ ] SELECT/INSERT/UPDATE/DELETE 정책 작성 (최소 SELECT 필수)
+- [ ] RLS 정책에 재귀 서브쿼리 없는지 확인 (같은 테이블 참조 금지)
+- [ ] 다른 유저로 접근 테스트 (RLS 검증)
+- [ ] status 등 필터 대상 컬럼에 DEFAULT 값 설정
+- [ ] 외래 키에 인덱스 생성
+- [ ] 마이그레이션 파일 생성
+- [ ] 타입 재생성 (`supabase gen types`)
+```
+
+### 새 쿼리 함수 작성 시
+
+```
+- [ ] { data, error } 구조분해 후 error 체크
+- [ ] 조인 쿼리에서 RLS 충돌 가능성 확인 (중첩 조인 → 2단계 쿼리 고려)
+- [ ] 단건 조회 시 .single() 사용
+- [ ] INSERT 시 필터 대상 컬럼 (status 등) 명시
+- [ ] 반환 타입 명시
+```
+
+### Supabase 500 에러 디버깅 흐름
+
+```
+1. 브라우저 콘솔/네트워크 탭에서 실패한 PostgREST URL 확인
+2. URL의 select 파라미터에서 중첩 조인 확인 (테이블A → 테이블B → 테이블C)
+3. 관련 테이블의 RLS 정책 점검:
+   - pg_policies 뷰에서 확인: SELECT * FROM pg_policies WHERE tablename = '테이블명'
+   - 정책의 USING 절에 같은 테이블 참조(재귀) 있는지 확인
+4. 재귀 발견 시: 정책을 user_id = auth.uid() 등 단순 조건으로 교체
+5. 재귀 아니면: 쿼리를 2단계로 분리 (ID 목록 조회 → 데이터 조회)
+6. 수정 후 동일 시나리오 재테스트
+```
+
+---
+
+## 우회/핵 금지 원칙
+
+| 우회 패턴 (금지) | 위험성 | 정석 해결 |
+|-----------------|--------|----------|
+| `SECURITY DEFINER` 함수로 RLS 우회 | 전체 보안 모델 무력화 — 모든 사용자가 모든 데이터 접근 | RLS 정책 자체를 올바르게 수정 |
+| `service_role` 키를 클라이언트에서 사용 | RLS 완전 무시, 전체 DB 노출 | `anon` 키 + 올바른 RLS 정책 |
+| RLS 비활성화하여 에러 해결 | 보안 없음 상태로 배포 | 정책 점검 후 올바른 정책 설정 |
+| 쿼리가 500이면 해당 기능을 제거 | 근본 원인(RLS) 미해결, 다른 쿼리에서 동일 문제 재발 | RLS 정책 수정 또는 쿼리 분리 |
+
+**원칙**: RLS/Auth/CORS가 에러를 일으키면, **보안 메커니즘을 우회하지 말고 올바르게 설정**한다. "일단 동작하게" 하는 것은 보안 시한폭탄이다.
+
+---
+
 ## 프로젝트별 확장 포인트
 
 > 아래 항목들은 프로젝트마다 다르므로 `/CLAUDE.md`에서 정의합니다:
@@ -851,3 +980,11 @@ npx supabase gen types typescript --local > src/services/supabase/types.ts
 > - Realtime 구독 대상 테이블
 > - 소셜 로그인 프로바이더 설정 (카카오, 네이버 등)
 > - 로컬/스테이징/프로덕션 환경 설정
+
+<!-- 개선 이력
+- 2026-03-27: 플랫폼별 Auth 설정 추가 — 웹에서 AsyncStorage 사용 시 세션 유실 발견
+- 2026-03-27: RLS 실전 함정 섹션 추가 — 중첩 조인/재귀 서브쿼리/임베디드 집계 + RLS = 500 발견
+- 2026-03-27: DB 컬럼 기본값 함정 추가 — status NULL로 INSERT 후 조회 누락 발견
+- 2026-03-27: 검증 체크리스트 추가 — 새 테이블/쿼리/500 디버깅 체크리스트
+- 2026-03-27: 우회/핵 금지 원칙 추가 — SECURITY DEFINER 우회 시도 경험에서 도출
+-->
