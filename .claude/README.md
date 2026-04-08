@@ -176,7 +176,9 @@ graph TD
 └── 💾 agent-memory/                  에이전트 메모리 (프로젝트 종속)
     ├── phase-planner/MEMORY.md        ⚠️ 새 프로젝트 시 리셋
     ├── prd-to-roadmap/MEMORY.md
-    ├── sprint-planner/MEMORY.md
+    ├── sprint-planner/
+    │   ├── MEMORY.md
+    │   └── project_sprint_status.md   스프린트 진행 상태 기록
     └── sprint-review/MEMORY.md
 ```
 

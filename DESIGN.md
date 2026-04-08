@@ -214,6 +214,7 @@ Cal.com's shadow system is the most sophisticated element of the design — 11 s
 | Large Desktop | >1199px | Max-width container, centered content |
 
 ### Touch Targets
+- Minimum touch area: 44x44pt (accessibility requirement)
 - Buttons: 8px radius with comfortable padding (10px+ vertical)
 - Nav links: Dark text with adequate spacing
 - Mobile CTAs: Full-width dark buttons for easy thumb access
