@@ -37,64 +37,23 @@ cp -r {기존프로젝트}/.claude/ {새프로젝트}/.claude/
 
 ### 3. 프로젝트 종속 데이터 초기화
 
-**중요:** .claude 폴더는 범용 프레임워크이므로 **프로젝트 종속 데이터가 포함되어서는 안 됩니다.**
-이전 프로젝트에서 복사해온 경우, 아래 항목을 반드시 초기화하세요.
+이전 프로젝트에서 복사했다면 아래 항목을 정리합니다:
 
-| 파일/폴더 | 종속성 | 새 프로젝트 시 조치 |
-|-----------|--------|-------------------|
-| `agent-memory/**` | 프로젝트 종속 | **내용 초기화** (에이전트 메모리 리셋) |
-| `memory/project_*.md` | 프로젝트 종속 | **삭제** (이전 프로젝트 정보) |
-| `settings.local.json` | 환경 종속 | **확인 후 정리** (이전 프로젝트 권한/토큰 제거) |
-| `rules/tech/{tech}.md` | 범용 (재사용) | 유지 — 다른 프로젝트에서도 재사용 |
-| `rules/workflow/*.md` | 범용 (재사용) | 유지 |
-| `agents/**`, `commands/**` | 범용 (재사용) | 유지 — 기술 스택 무관 |
-| `memory/user_*.md`, `memory/feedback_*.md` | 사용자 선호 (재사용) | 유지 — 작업 스타일 공통 |
-| `templates/**` | 범용 (재사용) | 유지 |
-| `README.md`, `settings.json` | 범용 (재사용) | 유지 |
+| 구분 | 파일/폴더 | 조치 |
+|:----:|-----------|------|
+| 🔄 | `agent-memory/**` | **초기화** — 이전 프로젝트 상태 리셋 |
+| 🔄 | `settings.local.json` | **확인** — 이전 권한/토큰 제거 |
+| ✅ | `rules/`, `agents/`, `commands/` | 유지 — 범용 |
+| ✅ | `memory/user_*.md`, `memory/feedback_*.md` | 유지 — 사용자 선호 |
 
-> **원칙**: .claude 폴더 안에는 특정 프로젝트에서만 의미 있는 데이터를 넣지 않습니다.
-> `agent-memory/`는 에이전트가 프로젝트 진행 중 자동으로 기록하는 영역이므로, 새 프로젝트 시작 시 리셋이 필요합니다.
-
-**왜 리셋이 필요한가?**
-- `agent-memory/`에 이전 프로젝트의 Sprint 2 상태가 남으면, sprint-planner가 현재 프로젝트에서 Sprint 3부터 시작하려 할 수 있습니다
-- `settings.local.json`의 `allow` 배열에 이전 프로젝트의 API 토큰/키가 남으면 보안 위험입니다
-
-> **Tip**: Claude에게 "새 프로젝트 시작할 거야"라고 말하면, 프로젝트 종속 데이터를 확인하고 정리를 제안합니다.
+> **Tip**: Claude에게 "새 프로젝트 시작할 거야"라고 말하면 자동으로 정리를 제안합니다.
 
 ### 4. 기술 스택 규칙 확인
 
 CLAUDE.md에 명시한 기술 스택의 `rules/tech/{tech}.md`가 있는지 확인합니다.
+없으면 Claude에게 생성을 요청하세요 — [RULES-TEMPLATE.md](templates/RULES-TEMPLATE.md) 기반으로 시니어 수준 규칙을 자동 생성합니다.
 
-| 기술 스택 | 규칙 파일 | 상태 |
-|-----------|-----------|------|
-| TypeScript | `rules/tech/typescript.md` | 제공됨 |
-| React Native + Expo | `rules/tech/react-native.md` | 제공됨 |
-| Supabase | `rules/tech/supabase.md` | 제공됨 |
-| C# | `rules/tech/csharp.md` | 제공됨 |
-
-**규칙 파일이 없는 기술 스택이라면:**
-Claude에게 `rules/tech/{tech}.md`를 생성하도록 요청하세요 — [RULES-TEMPLATE.md](templates/RULES-TEMPLATE.md) 기반으로 시니어 수준 규칙을 자동 생성합니다.
-한번 생성하면 다음 프로젝트에서도 재사용됩니다 — 이것이 **범용성 확장**의 핵심입니다.
-
-### 5. 프로젝트 문서 작성 (필요 시)
-
-| 문서 | 용도 | 작성 시점 |
-|------|------|-----------|
-| `CLAUDE.md` | 프로젝트 정의 ([템플릿 보기](#-claudemd-템플릿)) | 프로젝트 시작 시 |
-| `DESIGN.md` | 디자인 시스템 (templates/designs/ 참조) | UI 작업 전 |
-| `ROADMAP.md` | Phase/Sprint 전체 로드맵 | `prd-to-roadmap` 에이전트로 생성 |
-| `docs/prd.md` | 요구사항 정의서 | 기능 개발 시작 전 |
-| `docs/phase/phase{N}.md` | Phase 상세 계획 | `phase-planner` 에이전트로 생성 |
-| `docs/sprint/sprint{N}.md` | Sprint 실행 명세 | `sprint-planner` 에이전트로 생성 |
-| `deploy.md` | 배포 기록 및 검증 결과 | 첫 스프린트 마무리 시 자동 생성 |
-
-### 6. settings.json 권한 설정 (선택)
-
-기본 `settings.json`에는 `cd`와 `git` 명령만 허용되어 있습니다.
-프로젝트 기술 스택에 맞는 빌드/테스트/린트 명령을 추가하면 매번 승인 없이 실행할 수 있습니다.
-([상세 설정 가이드](#-settingsjson-권한-설정))
-
-### 7. 개발 시작!
+### 5. 개발 시작!
 
 ---
 
@@ -138,7 +97,8 @@ graph TD
 │   ├── workflow/                      워크플로우 규칙
 │   │   ├── session-init.md              세션 컨텍스트 로딩 규칙
 │   │   ├── prd-guide.md                 PRD 작성 품질 가이드
-│   │   └── sprint-workflow.md           스프린트/핫픽스 워크플로우
+│   │   ├── sprint-workflow.md           스프린트/핫픽스 워크플로우
+│   │   └── notion.md                    Notion 문서 작성 가이드
 │   └── tech/                          기술 스택 전문 규칙
 │       ├── typescript.md                TypeScript 베스트 프랙티스
 │       ├── react-native.md              React Native + Expo
@@ -162,23 +122,19 @@ graph TD
 │   ├── hotfix-close.md                Hotfix 마무리
 │   └── deploy-prod.md                 배포 준비
 │
-├── ⌨️ commands/                      사용자 실행 커맨드 (3개)
+├── ⌨️ commands/                      사용자 실행 커맨드 (2개)
 │   ├── sprint-dev.md                  /sprint-dev {N}
-│   ├── design-review.md              /design-review — DESIGN.md 풀 파워 검증
-│   └── to-notion.md                   /to-notion — Notion 문서 작성 가이드
+│   └── design-review.md              /design-review — DESIGN.md 풀 파워 검증
 │
 ├── 🧠 memory/                       사용자 선호 (범용, 프로젝트 간 재사용)
 │   ├── MEMORY.md                      메모리 인덱스
 │   ├── user_*.md                      사용자 프로필
-│   ├── feedback_*.md                  작업 방식 피드백
-│   └── project_*.md                   프로젝트 종속 정보 (⚠️ 새 프로젝트 시 삭제)
+│   └── feedback_*.md                  작업 방식 피드백
 │
 └── 💾 agent-memory/                  에이전트 메모리 (프로젝트 종속)
     ├── phase-planner/MEMORY.md        ⚠️ 새 프로젝트 시 리셋
     ├── prd-to-roadmap/MEMORY.md
-    ├── sprint-planner/
-    │   ├── MEMORY.md
-    │   └── project_sprint_status.md   스프린트 진행 상태 기록
+    ├── sprint-planner/MEMORY.md
     └── sprint-review/MEMORY.md
 ```
 
@@ -220,6 +176,7 @@ graph TD
 | [session-init.md](rules/workflow/session-init.md) | 세션 시작 시 컨텍스트 로딩 | 매 세션 |
 | [sprint-workflow.md](rules/workflow/sprint-workflow.md) | 스프린트/핫픽스 프로세스 | Sprint 작업 시 |
 | [prd-guide.md](rules/workflow/prd-guide.md) | PRD 작성 품질 기준 | PRD 작성/검토 시 |
+| [notion.md](rules/workflow/notion.md) | Notion 문서 작성 가이드 | 문서 정리 시 |
 | [RULES-TEMPLATE.md](templates/RULES-TEMPLATE.md) | rules 파일 작성 메타 템플릿 | 새 규칙 생성 시 |
 
 ### 기술 전문 규칙 (제공됨)
@@ -265,88 +222,13 @@ graph TD
 | 커맨드 | 용도 |
 |--------|------|
 | `/sprint-dev {N}` | sprint{N}.md를 읽고 Task별로 구현 실행 |
-| `/design-review` | DESIGN.md 기반 디자인 시스템 풀 파워 검증 |
-| `/to-notion` | Notion 문서 작성 가이드 (온디맨드) |
 
 ---
 
 ## 📝 CLAUDE.md 템플릿
 
-프로젝트 루트에 `/CLAUDE.md`를 작성할 때 아래 템플릿을 복사하여 수정합니다:
-
-````markdown
-# {프로젝트명}
-
-## 프로젝트 개요
-- 목적: {한 줄 설명}
-- 유형: {웹 앱 / 데스크톱 앱 / API 서버 / 라이브러리 / CLI 도구 등}
-
-## 기술 스택
-- 언어: {예: TypeScript, Python, C# 등}
-- 프레임워크: {예: React, FastAPI, .NET 8 등}
-- 런타임: {예: Node.js 20, Python 3.12, .NET 8 등}
-- 패키지 관리: {예: npm, pip, NuGet 등}
-- 데이터베이스: {예: PostgreSQL, MongoDB, SQLite 등} (해당 시)
-- 주요 라이브러리: {프로젝트 핵심 의존성 목록}
-
-## 프로젝트 구조
-```
-{project-root}/
-├── src/              # 소스 코드
-├── tests/            # 테스트
-├── docs/             # 문서
-│   ├── sprint/       # 스프린트 명세서
-│   └── phase/        # Phase 계획서
-├── CLAUDE.md         # 이 파일
-├── ROADMAP.md        # 로드맵
-└── deploy.md         # 배포 기록
-```
-
-## 빌드 & 실행
-
-### 빌드
-```bash
-{프로젝트 빌드 명령}
-```
-
-### 개발 서버
-```bash
-{개발 서버 실행 명령}
-```
-
-### 테스트
-```bash
-{테스트 실행 명령}
-```
-
-### 린트/포맷
-```bash
-{린트, 포맷팅 명령}
-```
-
-## 브랜치 전략
-- 메인 브랜치: `main` (또는 `master`)
-- 개발 브랜치: `develop`
-- 작업 브랜치: `sprint{N}` / `feature/*` / `hotfix/*` → develop으로 PR
-
-## CI/CD
-{CI/CD 파이프라인 설명}
-
-## 배포
-{배포 환경 및 절차}
-
-## 코드 컨벤션
-- {프로젝트 고유 네이밍 규칙}
-- {커밋 메시지 형식}
-
-## 외부 연동 (해당 시)
-- {API, 서비스 연동 정보}
-
-## Notion 연동 (해당 시)
-- 루트 페이지: {URL}
-- Integration 토큰: 환경 변수 `NOTION_TOKEN`으로 관리
-- 하위 페이지 ID: {각 페이지별 ID}
-````
+프로젝트 루트의 `/CLAUDE.md` 템플릿은 [`templates/CLAUDE-TEMPLATE.md`](templates/CLAUDE-TEMPLATE.md) 에 있습니다.
+새 프로젝트는 `project-init` 에이전트가 이 템플릿을 기반으로 자동 생성합니다.
 
 ---
 
@@ -391,15 +273,11 @@ graph TD
 
 ## 📄 프로젝트 문서 구성
 
-> 상세 문서 목록과 작성 시점은 [Quick Start Step 5](#5-프로젝트-문서-작성-필요-시) 참조
-
 | 문서 | 용도 | 생성 방법 |
 |------|------|----------|
-| `CLAUDE.md` | 프로젝트 정의 (기술 스택, 빌드, 구조) | 수동 작성 ([템플릿](#-claudemd-템플릿)) |
-| `DESIGN.md` | 디자인 시스템 | `project-init` 에이전트 (templates/designs/ 기반) |
+| `CLAUDE.md` | 프로젝트 정의 (기술 스택, 빌드, 구조) | 수동 작성 |
 | `ROADMAP.md` | Phase/Sprint 전체 로드맵 | `prd-to-roadmap` 에이전트 |
 | `docs/prd.md` | 요구사항 정의서 | 수동 작성 ([가이드](rules/workflow/prd-guide.md)) |
-| `docs/backlog.md` | Product Backlog (리뷰 발견 이슈) | 수동 관리 |
 | `docs/phase/phase{N}.md` | Phase 상세 계획 | `phase-planner` 에이전트 |
 | `docs/sprint/sprint{N}.md` | Sprint 실행 명세 | `sprint-planner` 에이전트 |
 | `deploy.md` | 배포 기록 및 검증 결과 | 자동 생성 |

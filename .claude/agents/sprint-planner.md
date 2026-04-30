@@ -3,7 +3,6 @@ name: sprint-planner
 description: "Use this agent when the user wants to plan a new sprint. This agent should be used when a user describes a feature, milestone, or set of tasks they want to implement and needs a structured sprint development plan created.\n\n<example>\nContext: The user wants to plan a sprint for implementing a new feature.\nuser: \"다음 스프린트에서 사용자 알림 기능을 구현하고 싶어.\"\nassistant: \"sprint-planner 에이전트를 사용해서 스프린트 계획을 수립할게요.\"\n<commentary>\n사용자가 구현하고 싶은 기능을 설명했으므로, sprint-planner 에이전트를 실행하여 ROADMAP.md를 읽고 코드베이스를 분석한 뒤 실행 가능한 스프린트 계획을 수립합니다.\n</commentary>\n</example>\n\n<example>\nContext: The user wants to plan a sprint for a new feature.\nuser: \"이번 스프린트는 새 기능 작업을 하고 싶어. 계획 세워줘.\"\nassistant: \"네, sprint-planner 에이전트를 통해 스프린트 계획을 수립하겠습니다.\"\n<commentary>\n사용자가 스프린트 계획 수립을 요청했으므로 sprint-planner 에이전트를 사용하여 ROADMAP.md 검토 후 개발 계획을 작성합니다.\n</commentary>\n</example>"
 model: opus
 color: red
-memory: project
 skills:
   - karpathy-guidelines
 ---
@@ -291,6 +290,19 @@ Task별 `skill:` 헤더를 작성할 때 **판단 플로우차트**를 위에서
 3. 확정되면 → "구현 시작해" 또는 "/sprint-dev {N}"
    (병렬 실행 시 → "Phase 2를 팀으로 실행해줘")
 ```
+
+## 발견된 정보 분기 기록
+
+[`agent-memory 정책`](../rules/workflow/agent-memory.md) + [`tech-knowledge.md`](../rules/workflow/tech-knowledge.md) 에 따라 처리.
+
+코드베이스 분석/Task 설계 중 발견한 정보 분기 판단:
+
+1. **다른 프로젝트에도 통하는 기술 노하우** (예: 기술 스택 함정/안티패턴) → `rules/tech/{tech}.md` 보강 (사용자 컨펌 후)
+2. **이 프로젝트의 코드베이스 컨텍스트** (예: 모듈/스키마 구조, 인프라 메모) → `agent-memory/sprint-planner/MEMORY.md` 에 캐시
+3. **공식 진행 상태** (Sprint 번호/현황) → `ROADMAP.md` 가 진실 원천. 시작 시 `ROADMAP.md` 를 읽어 다음 번호 도출 (캐시 X)
+4. **사용자 작업 스타일** → `memory/feedback_*.md`
+
+후보가 있으면 사용자에게 컨펌 (위치+내용 명시). 후보 없으면 스킵. 위임 신호 받은 경우 자동 기록 + 사후 보고.
 
 ## 에러 처리
 

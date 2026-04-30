@@ -3,7 +3,6 @@ name: sprint-review
 description: "Use this agent after sprint-close PR has been reviewed. Runs code review and automated verification, then updates deploy.md with results.\n\n<example>\nContext: The user has reviewed the sprint PR and wants to run verification.\nuser: \"PR 확인했어. 스프린트 리뷰 해줘.\"\nassistant: \"sprint-review 에이전트로 코드 리뷰와 빌드 검증을 실행하겠습니다.\"\n<commentary>\nPR 검토 완료 후 코드 리뷰 + 검증이 필요하므로 sprint-review 에이전트를 사용합니다.\n</commentary>\n</example>\n\n<example>\nContext: Sprint close is done and user wants to verify.\nuser: \"스프린트 리뷰 해줘\"\nassistant: \"sprint-review 에이전트로 코드 리뷰와 검증을 진행하겠습니다.\"\n<commentary>\n스프린트 리뷰 요청이므로 sprint-review 에이전트를 사용합니다.\n</commentary>\n</example>"
 model: sonnet
 color: blue
-memory: project
 skills:
   - code-review
 maxTurns: 50
@@ -234,6 +233,21 @@ Sprint 결과가 Phase 계획에 영향을 주는지 확인합니다.
 - [ ] Notion 업데이트 필요 여부 파악
 
 하나라도 누락되었으면 보고하기 전에 완료합니다.
+
+## 발견된 정보 분기 기록
+
+[`agent-memory 정책`](../rules/workflow/agent-memory.md) + [`tech-knowledge.md`](../rules/workflow/tech-knowledge.md) 에 따라 처리.
+
+코드 리뷰에서 발견한 정보 분기 판단:
+
+1. **다른 프로젝트에도 통하는 기술 안티패턴/함정** (예: 특정 프레임워크의 보안/성능 이슈 패턴) → `rules/tech/{tech}.md` 보강 (**여기가 진짜 누적 위치 — 코드 리뷰가 가장 자주 발견하는 위치**)
+2. **이 프로젝트 코드베이스에서만 자주 보이는 이슈 패턴** (이 프로젝트 한정) → `agent-memory/sprint-review/MEMORY.md` 에 캐시
+3. **리뷰 결과/이슈 카운트** → `deploy.md` 가 진실 원천 (캐시 X)
+4. **사용자 작업 스타일** → `memory/feedback_*.md`
+
+> 코드 리뷰는 범용 노하우 발견의 핵심 경로. **다른 프로젝트에도 통할 패턴이면 적극적으로 `rules/tech/{tech}.md` 에 누적 제안**.
+
+후보가 있으면 사용자에게 컨펌 (위치+내용 명시). 후보 없으면 스킵. 위임 신호 받은 경우 자동 기록 + 사후 보고.
 
 ## 에러 처리
 

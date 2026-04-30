@@ -1,5 +1,32 @@
 # CrewUp — 테니스 동호회 관리 플랫폼
 
+## 세션 시작 시 자동 로딩 (필수)
+
+이 프로젝트는 `.claude/` 폴더에 다음을 포함합니다:
+- `.claude/memory/` — 사용자 작업 스타일·원칙 (자동 로딩 대상 아님)
+- `.claude/rules/workflow/session-init.md` — 세션 절차/작업 유형별 로딩 매트릭스
+- `.claude/rules/tech/{tech}.md` — 기술 스택 전문 규칙
+- `.claude/rules/workflow/*.md` — 워크플로우 규칙
+
+세션 시작 시 사용자는 **`/InitLoad` 슬래시 커맨드를 호출**하여 메모리와 세션 절차를 일괄 로딩한 뒤 작업을 시작합니다.
+`/InitLoad` 가 호출되지 않은 채로 작업 요청이 들어오면 — Claude 는 먼저 `/InitLoad` 절차를 수행하고 작업을 진행합니다.
+
+> Claude Code 가 자동 로딩하는 것은 이 `CLAUDE.md` 와 사용자 홈 메모리뿐입니다.
+> `.claude/memory/`, `.claude/rules/` 는 `/InitLoad` 또는 명시적 Read 가 필요합니다.
+
+## 에이전트 진입 절차 (필수, 모든 에이전트 공통)
+
+이 프로젝트의 어떤 에이전트로 호출되었든 (Task tool 통한 서브 에이전트 포함), **본 에이전트의 작업 절차에 진입하기 전에** 다음을 먼저 수행한다:
+
+1. **메모리 로딩** — `.claude/memory/MEMORY.md` 의 로딩 방식 따라 메모리 일괄 Read (사용자 작업 스타일·원칙 인지).
+2. **기술 룰 로딩** — 아래 "기술 스택" 항목 보고 해당 `.claude/rules/tech/{tech}.md` Read.
+3. **작업 유형별 추가 로딩** — `.claude/rules/workflow/session-init.md` 의 "작업 유형별 로딩 대상" 표 참조하여 필요한 것만.
+4. (해당 시) **에이전트 자기 메모리** — `.claude/agent-memory/{에이전트명}/MEMORY.md` 가 있으면 Read.
+
+자세한 절차/위반 감지/Good vs Bad 시나리오: [`.claude/rules/workflow/session-init.md`](./.claude/rules/workflow/session-init.md) 의 "에이전트 진입 절차" 섹션 참조.
+
+> ⚠️ **이 절차 생략 시 발생하는 문제**: 사용자 룰 모르고 작업 시작 → 한꺼번에 여러 파일 수정, 컨벤션 위반, 같은 피드백 반복. 본 절차는 모든 에이전트에 강제된다.
+
 ## 프로젝트 개요
 - 목적: 동호회 운영자가 동호회를 만들고 관리하며, 일반인이 동호회를 찾아 가입할 수 있는 플랫폼
 - 유형: 모바일 퍼스트 웹앱 (PWA → 네이티브 앱 전환 예정)
@@ -166,6 +193,13 @@ npx supabase db reset         # 마이그레이션 + 시드 적용
 npx supabase gen types typescript --local > src/services/supabase/types.ts  # 타입 생성
 ```
 
+### Supabase Cloud (현재 운영 환경)
+```bash
+npx supabase db push          # 로컬 마이그레이션 → Cloud 적용
+npx supabase gen types typescript --linked > src/services/supabase/types.ts  # Cloud 기준 타입 생성
+```
+> 현재 이 프로젝트는 Supabase Cloud 환경 사용 중. Cloud CLI 링크 완료 상태.
+
 ### 앱 빌드 (EAS)
 ```bash
 eas build --platform android --profile preview   # Android 프리뷰
@@ -244,6 +278,12 @@ profiles 1:N notifications
 - 종목은 `sport_categories` FK로 참조
 - 지역은 region/city/district 3단계 분류
 - 상세 필드 정의: `docs/prd.md` 참조
+
+### DB 함수/트리거 (이미 존재 — 재정의 금지)
+이 프로젝트에는 다음 함수/트리거가 마이그레이션에 이미 정의되어 있다. 새 마이그레이션에서 동명 함수 **재정의 금지**:
+- `update_updated_at()` — `updated_at` 자동 갱신 트리거 함수
+- `handle_new_user()` — `auth.users` 생성 시 `profiles` 자동 생성 트리거 함수
+> 새 테이블에 `updated_at` 추가 시 기존 `update_updated_at()` 트리거를 활용한다.
 
 ## 기존 목업 참고
 

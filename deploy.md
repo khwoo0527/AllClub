@@ -14,7 +14,7 @@
 | **빌드 명령** | `npx expo export --platform web` |
 | **출력 디렉토리** | `dist` |
 | **환경 변수** | 기존 Sprint 1과 동일 (변경 없음) |
-| **백엔드** | Supabase Cloud (`ozzahhbhexhwzpezucbm.supabase.co`) |
+| **백엔드** | Supabase Cloud (`xojglgegcdxpamnhgoix.supabase.co`) |
 | **인증** | Google OAuth (기존 유지) |
 | **DB 변경** | 4개 테이블 추가 (sport_categories, clubs, club_members, join_requests) + RLS |
 | **신규 기능** | 동호회 생성, 동호회 목록/검색, 동호회 상세, 내 동호회 |
@@ -37,7 +37,7 @@
 | **빌드 명령** | `npx expo export --platform web` |
 | **출력 디렉토리** | `dist` |
 | **환경 변수** | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` (Vercel Settings) |
-| **백엔드** | Supabase Cloud (`ozzahhbhexhwzpezucbm.supabase.co`) |
+| **백엔드** | Supabase Cloud (`xojglgegcdxpamnhgoix.supabase.co`) |
 | **인증** | Google OAuth (PC + 모바일 테스트 완료) |
 | **DB 변경** | profiles 테이블 + RLS |
 | **신규 기능** | 소셜 로그인, 온보딩, 프로필, 인증 가드 |
